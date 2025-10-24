@@ -476,7 +476,15 @@ const Index = () => {
       <Header />
       <div className="flex-1 flex overflow-hidden">
         <div className="w-80 border-r bg-card flex flex-col overflow-hidden">
-          {mode === "classification" ? (
+          {(mode === "video" || mode === "audio" || mode === "text") ? (
+            <LabelSidebar
+              labels={labels}
+              selectedLabelId={selectedLabelId}
+              onSelectLabel={setSelectedLabelId}
+              onAddLabel={handleAddLabel}
+              onDeleteLabel={handleDeleteLabel}
+            />
+          ) : mode === "classification" ? (
             <LabelSidebarUnified
               labels={labels}
               selectedLabelId={selectedLabelId}

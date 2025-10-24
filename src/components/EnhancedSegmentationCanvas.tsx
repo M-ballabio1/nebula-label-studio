@@ -30,7 +30,7 @@ export const EnhancedSegmentationCanvas = ({
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [lastPanPos, setLastPanPos] = useState({ x: 0, y: 0 });
-  const [imageBounds, setImageBounds] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
+  const imageBoundsRef = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -75,13 +75,13 @@ export const EnhancedSegmentationCanvas = ({
         });
       }
 
-      // Store image bounds for coordinate clamping
-      setImageBounds({
+      // Store image bounds in ref for immediate access
+      imageBoundsRef.current = {
         x: offsetX,
         y: offsetY,
         width: scaledWidth,
         height: scaledHeight,
-      });
+      };
 
       ctx.drawImage(img, offsetX, offsetY, scaledWidth, scaledHeight);
       ctx.restore();
@@ -159,6 +159,7 @@ export const EnhancedSegmentationCanvas = ({
   };
 
   const clampToImage = (x: number, y: number) => {
+    const imageBounds = imageBoundsRef.current;
     if (!imageBounds) return { x, y };
     return {
       x: Math.max(imageBounds.x, Math.min(imageBounds.x + imageBounds.width, x)),

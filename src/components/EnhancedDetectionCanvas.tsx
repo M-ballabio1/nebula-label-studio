@@ -35,6 +35,7 @@ export const EnhancedDetectionCanvas = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
+  const imageBoundsRef = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
   
   const [isDrawing, setIsDrawing] = useState(false);
   const [startPoint, setStartPoint] = useState<{ x: number; y: number } | null>(null);
@@ -48,7 +49,6 @@ export const EnhancedDetectionCanvas = ({
   const [mode, setMode] = useState<InteractionMode>("draw");
   const [resizeHandle, setResizeHandle] = useState<ResizeHandle>(null);
   const [copiedBox, setCopiedBox] = useState<Omit<BoundingBox, "id"> | null>(null);
-  const [imageBounds, setImageBounds] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
 
   useEffect(() => {
     const img = new Image();
@@ -126,13 +126,13 @@ export const EnhancedDetectionCanvas = ({
     const offsetX = (canvas.width / zoom - scaledWidth) / 2;
     const offsetY = (canvas.height / zoom - scaledHeight) / 2;
 
-    // Store image bounds for coordinate clamping
-    setImageBounds({
+    // Store image bounds in ref for immediate access
+    imageBoundsRef.current = {
       x: offsetX,
       y: offsetY,
       width: scaledWidth,
       height: scaledHeight,
-    });
+    };
 
     // Draw image
     ctx.drawImage(img, offsetX, offsetY, scaledWidth, scaledHeight);
@@ -199,6 +199,7 @@ export const EnhancedDetectionCanvas = ({
   };
 
   const clampToImage = (x: number, y: number) => {
+    const imageBounds = imageBoundsRef.current;
     if (!imageBounds) return { x, y };
     return {
       x: Math.max(imageBounds.x, Math.min(imageBounds.x + imageBounds.width, x)),
@@ -293,6 +294,7 @@ export const EnhancedDetectionCanvas = ({
     // Handle resize
     if (resizeHandle && startPoint && selectedBoxId) {
       const box = boxes.find((b) => b.id === selectedBoxId);
+      const imageBounds = imageBoundsRef.current;
       if (!box || !imageBounds) return;
 
       const dx = coords.x - startPoint.x;
@@ -326,6 +328,7 @@ export const EnhancedDetectionCanvas = ({
     // Handle move
     if (mode === "move" && startPoint && selectedBoxId) {
       const box = boxes.find((b) => b.id === selectedBoxId);
+      const imageBounds = imageBoundsRef.current;
       if (!box || !imageBounds) return;
 
       const dx = coords.x - startPoint.x;
@@ -383,18 +386,26 @@ export const EnhancedDetectionCanvas = ({
       return;
     }
 
-    if (isDrawing && currentBox && selectedLabelId && currentBox.width > 5 && currentBox.height > 5 && imageBounds) {
-      // Clamp the box to image bounds
-      const clampedBox = {
-        x: Math.max(imageBounds.x, currentBox.x),
-        y: Math.max(imageBounds.y, currentBox.y),
-        width: Math.min(imageBounds.x + imageBounds.width - Math.max(imageBounds.x, currentBox.x), currentBox.width),
-        height: Math.min(imageBounds.y + imageBounds.height - Math.max(imageBounds.y, currentBox.y), currentBox.height),
-      };
-      
-      if (clampedBox.width > 5 && clampedBox.height > 5) {
+    if (isDrawing && currentBox && selectedLabelId && currentBox.width > 5 && currentBox.height > 5) {
+      const imageBounds = imageBoundsRef.current;
+      if (imageBounds) {
+        // Clamp the box to image bounds
+        const clampedBox = {
+          x: Math.max(imageBounds.x, currentBox.x),
+          y: Math.max(imageBounds.y, currentBox.y),
+          width: Math.min(imageBounds.x + imageBounds.width - Math.max(imageBounds.x, currentBox.x), currentBox.width),
+          height: Math.min(imageBounds.y + imageBounds.height - Math.max(imageBounds.y, currentBox.y), currentBox.height),
+        };
+        
+        if (clampedBox.width > 5 && clampedBox.height > 5) {
+          onAddBox({
+            ...clampedBox,
+            labelId: selectedLabelId,
+          });
+        }
+      } else {
         onAddBox({
-          ...clampedBox,
+          ...currentBox,
           labelId: selectedLabelId,
         });
       }

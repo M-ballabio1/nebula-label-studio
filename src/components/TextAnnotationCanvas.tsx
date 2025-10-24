@@ -107,80 +107,41 @@ export const TextAnnotationCanvas = ({
   };
 
   return (
-    <div className="flex-1 flex bg-background">
-      <div className="flex-1 flex flex-col">
-        <div className="p-4 border-b bg-card flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Type className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium">
-              {selectedLabelId
-                ? `Select text to annotate as: ${labels.find((l) => l.id === selectedLabelId)?.name}`
-                : "Select a label to start annotating"}
-            </span>
-          </div>
-          {hoveredAnnotationId && (
-            <Button
-              size="sm"
-              variant="destructive"
-              onClick={() => onDeleteAnnotation(hoveredAnnotationId)}
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          )}
+    <div className="flex-1 flex flex-col bg-background">
+      <div className="p-4 border-b bg-card flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Type className="w-4 h-4 text-primary" />
+          <span className="text-sm font-medium">
+            {selectedLabelId
+              ? `Select text to annotate as: ${labels.find((l) => l.id === selectedLabelId)?.name}`
+              : "Select a label to start annotating"}
+          </span>
         </div>
-
-        <ScrollArea className="flex-1">
-          <div
-            className="p-8 text-base leading-relaxed select-text"
-            onMouseUp={handleTextSelect}
+        {hoveredAnnotationId && (
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={() => onDeleteAnnotation(hoveredAnnotationId)}
           >
-            {renderAnnotatedText()}
-          </div>
-        </ScrollArea>
+            <Trash2 className="w-4 h-4 mr-1" />
+            Delete
+          </Button>
+        )}
       </div>
 
-      <div className="w-80 border-l bg-card">
-        <div className="p-4 border-b">
-          <h3 className="font-semibold text-sm">Annotations</h3>
-          <p className="text-xs text-muted-foreground mt-1">
-            {annotations.length} annotation{annotations.length !== 1 ? "s" : ""}
-          </p>
+      <ScrollArea className="flex-1">
+        <div
+          className="p-8 text-base leading-relaxed select-text"
+          onMouseUp={handleTextSelect}
+        >
+          {renderAnnotatedText()}
         </div>
-        <ScrollArea className="h-[calc(100vh-200px)]">
-          <div className="p-2 space-y-2">
-            {annotations.map((annotation) => {
-              const label = labels.find((l) => l.id === annotation.labelId);
-              if (!label) return null;
+      </ScrollArea>
 
-              return (
-                <div
-                  key={annotation.id}
-                  className={`p-3 rounded-lg border transition-all cursor-pointer ${
-                    hoveredAnnotationId === annotation.id
-                      ? "bg-accent ring-2 ring-primary"
-                      : "hover:bg-accent/50"
-                  }`}
-                  onMouseEnter={() => setHoveredAnnotationId(annotation.id)}
-                  onMouseLeave={() => setHoveredAnnotationId(null)}
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <div
-                      className="w-3 h-3 rounded"
-                      style={{ backgroundColor: label.color }}
-                    />
-                    <span className="text-sm font-medium">{label.name}</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground line-clamp-2">
-                    "{annotation.text}"
-                  </p>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    Chars: {annotation.startIndex}-{annotation.endIndex}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </ScrollArea>
+      <div className="p-4 border-t bg-card">
+        <div className="text-sm text-muted-foreground">
+          {annotations.length} annotation{annotations.length !== 1 ? "s" : ""}
+        </div>
       </div>
     </div>
   );
