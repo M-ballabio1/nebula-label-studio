@@ -3,9 +3,17 @@ import { Header } from "@/components/Header";
 import { LabelSidebar } from "@/components/LabelSidebar";
 import { AnnotationToolbar } from "@/components/AnnotationToolbar";
 import { ThumbnailGallery } from "@/components/ThumbnailGallery";
-import { DetectionCanvas } from "@/components/DetectionCanvas";
+import { EnhancedDetectionCanvas } from "@/components/EnhancedDetectionCanvas";
 import { ClassificationPanel } from "@/components/ClassificationPanel";
 import { SegmentationCanvas } from "@/components/SegmentationCanvas";
+import { AudioAnnotationCanvas } from "@/components/AudioAnnotationCanvas";
+import { TextAnnotationCanvas } from "@/components/TextAnnotationCanvas";
+import { ImageInfoPanel } from "@/components/ImageInfoPanel";
+import {
+  ResizablePanelGroup,
+  ResizablePanel,
+  ResizableHandle,
+} from "@/components/ui/resizable";
 import {
   AnnotationMode,
   Label,
@@ -13,6 +21,8 @@ import {
   BoundingBox,
   SegmentationPolygon,
   ClassificationTag,
+  AudioSegment,
+  TextAnnotation,
 } from "@/types/annotation";
 import { toast } from "sonner";
 
@@ -62,12 +72,21 @@ const SAMPLE_IMAGES: ImageItem[] = [
   },
 ];
 
+const SAMPLE_AUDIO_URL = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
+const SAMPLE_TEXT = "Natural Language Processing (NLP) is a subfield of artificial intelligence that focuses on the interaction between computers and humans through natural language. The ultimate objective of NLP is to read, decipher, understand, and make sense of human languages in a manner that is valuable. Most NLP techniques rely on machine learning to derive meaning from human languages. NLP is used to apply algorithms to identify and extract the natural language rules such that unstructured language data is converted into a form that computers can understand.";
+
 const Index = () => {
   const [mode, setMode] = useState<AnnotationMode>("detection");
   const [labels, setLabels] = useState<Label[]>(INITIAL_LABELS);
   const [selectedLabelId, setSelectedLabelId] = useState<string | null>(labels[0]?.id || null);
   const [images, setImages] = useState<ImageItem[]>(SAMPLE_IMAGES);
   const [selectedImageId, setSelectedImageId] = useState<string | null>(images[0]?.id || null);
+  const [audioSegments, setAudioSegments] = useState<AudioSegment[]>([]);
+  const [textAnnotations, setTextAnnotations] = useState<TextAnnotation[]>([]);
+  const [imageDimensions, setImageDimensions] = useState({ width: 0, height: 0 });
+  const [normalizedDimensions, setNormalizedDimensions] = useState({ width: 0, height: 0 });
+  const [selectedBox, setSelectedBox] = useState<BoundingBox | null>(null);
+  const [hoveredBox, setHoveredBox] = useState<BoundingBox | null>(null);
 
   const selectedImage = images.find((img) => img.id === selectedImageId);
 
@@ -108,6 +127,25 @@ const Index = () => {
       )
     );
     toast.success("Bounding box added");
+  };
+
+  const handleUpdateBox = (id: string, updates: Partial<BoundingBox>) => {
+    if (!selectedImageId) return;
+    setImages(
+      images.map((img) =>
+        img.id === selectedImageId
+          ? {
+              ...img,
+              annotations: {
+                ...img.annotations,
+                boxes: (img.annotations.boxes || []).map((b) =>
+                  b.id === id ? { ...b, ...updates } : b
+                ),
+              },
+            }
+          : img
+      )
+    );
   };
 
   const handleDeleteBox = (id: string) => {
@@ -188,73 +226,145 @@ const Index = () => {
     );
   };
 
+  const handleAddAudioSegment = (segment: Omit<AudioSegment, "id">) => {
+    const newSegment: AudioSegment = {
+      ...segment,
+      id: `segment-${Date.now()}`,
+    };
+    setAudioSegments([...audioSegments, newSegment]);
+    toast.success("Audio segment added");
+  };
+
+  const handleDeleteAudioSegment = (id: string) => {
+    setAudioSegments(audioSegments.filter((s) => s.id !== id));
+    toast.success("Audio segment deleted");
+  };
+
+  const handleAddTextAnnotation = (annotation: Omit<TextAnnotation, "id">) => {
+    const newAnnotation: TextAnnotation = {
+      ...annotation,
+      id: `text-ann-${Date.now()}`,
+    };
+    setTextAnnotations([...textAnnotations, newAnnotation]);
+    toast.success("Text annotation added");
+  };
+
+  const handleDeleteTextAnnotation = (id: string) => {
+    setTextAnnotations(textAnnotations.filter((a) => a.id !== id));
+    toast.success("Text annotation deleted");
+  };
+
   return (
     <div className="h-screen flex flex-col bg-background">
       <Header />
       <div className="flex-1 flex overflow-hidden">
-        <LabelSidebar
-          labels={labels}
-          selectedLabelId={selectedLabelId}
-          onSelectLabel={setSelectedLabelId}
-          onAddLabel={handleAddLabel}
-          onDeleteLabel={handleDeleteLabel}
-        />
-        <div className="flex-1 flex flex-col">
-          <AnnotationToolbar mode={mode} onModeChange={setMode} />
-          {selectedImage && (
-            <>
-              {mode === "detection" && (
-                <DetectionCanvas
-                  imageUrl={selectedImage.url}
-                  boxes={selectedImage.annotations.boxes || []}
-                  labels={labels}
-                  selectedLabelId={selectedLabelId}
-                  onAddBox={handleAddBox}
-                  onDeleteBox={handleDeleteBox}
-                />
-              )}
-              {mode === "classification" && (
-                <ClassificationPanel
-                  imageUrl={selectedImage.url}
-                  tags={selectedImage.annotations.tags || []}
-                  labels={labels}
-                  onToggleTag={handleToggleTag}
-                />
-              )}
-              {mode === "segmentation" && (
-                <SegmentationCanvas
-                  imageUrl={selectedImage.url}
-                  polygons={selectedImage.annotations.polygons || []}
-                  labels={labels}
-                  selectedLabelId={selectedLabelId}
-                  onAddPolygon={handleAddPolygon}
-                  onDeletePolygon={handleDeletePolygon}
-                />
-              )}
-              {mode === "audio" && (
-                <div className="flex-1 flex items-center justify-center bg-muted/30">
-                  <div className="text-center p-8">
-                    <h3 className="text-xl font-semibold mb-2">Audio Annotation</h3>
-                    <p className="text-muted-foreground">Audio annotation interface coming soon</p>
-                  </div>
-                </div>
-              )}
-              {mode === "text" && (
-                <div className="flex-1 flex items-center justify-center bg-muted/30">
-                  <div className="text-center p-8">
-                    <h3 className="text-xl font-semibold mb-2">Text Annotation</h3>
-                    <p className="text-muted-foreground">Text annotation interface coming soon</p>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-          <ThumbnailGallery
-            images={images}
-            selectedImageId={selectedImageId}
-            onSelectImage={setSelectedImageId}
-          />
-        </div>
+        <ResizablePanelGroup direction="horizontal" className="w-full">
+          <ResizablePanel defaultSize={20} minSize={15} maxSize={30}>
+            <LabelSidebar
+              labels={labels}
+              selectedLabelId={selectedLabelId}
+              onSelectLabel={setSelectedLabelId}
+              onAddLabel={handleAddLabel}
+              onDeleteLabel={handleDeleteLabel}
+            />
+          </ResizablePanel>
+          
+          <ResizableHandle withHandle />
+          
+          <ResizablePanel defaultSize={80} minSize={50}>
+            <div className="h-full flex flex-col">
+              <AnnotationToolbar mode={mode} onModeChange={setMode} />
+              
+              <ResizablePanelGroup direction="vertical" className="flex-1">
+                <ResizablePanel defaultSize={75} minSize={40}>
+                  {selectedImage && mode === "detection" && (
+                    <EnhancedDetectionCanvas
+                      imageUrl={selectedImage.url}
+                      boxes={selectedImage.annotations.boxes || []}
+                      labels={labels}
+                      selectedLabelId={selectedLabelId}
+                      onAddBox={handleAddBox}
+                      onDeleteBox={handleDeleteBox}
+                      onUpdateBox={handleUpdateBox}
+                      onImageLoad={(dims) => {
+                        setImageDimensions(dims);
+                        const canvas = document.querySelector("canvas");
+                        if (canvas) {
+                          setNormalizedDimensions({
+                            width: canvas.width,
+                            height: canvas.height,
+                          });
+                        }
+                      }}
+                      onBoxSelect={setSelectedBox}
+                      onBoxHover={setHoveredBox}
+                    />
+                  )}
+                  {selectedImage && mode === "classification" && (
+                    <ClassificationPanel
+                      imageUrl={selectedImage.url}
+                      tags={selectedImage.annotations.tags || []}
+                      labels={labels}
+                      onToggleTag={handleToggleTag}
+                    />
+                  )}
+                  {selectedImage && mode === "segmentation" && (
+                    <SegmentationCanvas
+                      imageUrl={selectedImage.url}
+                      polygons={selectedImage.annotations.polygons || []}
+                      labels={labels}
+                      selectedLabelId={selectedLabelId}
+                      onAddPolygon={handleAddPolygon}
+                      onDeletePolygon={handleDeletePolygon}
+                    />
+                  )}
+                  {mode === "audio" && (
+                    <AudioAnnotationCanvas
+                      audioUrl={SAMPLE_AUDIO_URL}
+                      segments={audioSegments}
+                      labels={labels}
+                      selectedLabelId={selectedLabelId}
+                      onAddSegment={handleAddAudioSegment}
+                      onDeleteSegment={handleDeleteAudioSegment}
+                    />
+                  )}
+                  {mode === "text" && (
+                    <TextAnnotationCanvas
+                      text={SAMPLE_TEXT}
+                      annotations={textAnnotations}
+                      labels={labels}
+                      selectedLabelId={selectedLabelId}
+                      onAddAnnotation={handleAddTextAnnotation}
+                      onDeleteAnnotation={handleDeleteTextAnnotation}
+                    />
+                  )}
+                </ResizablePanel>
+
+                {mode === "detection" && selectedImage && (
+                  <>
+                    <ResizableHandle />
+                    <ResizablePanel defaultSize={25} minSize={15} maxSize={40}>
+                      <ImageInfoPanel
+                        imageDimensions={imageDimensions}
+                        normalizedDimensions={normalizedDimensions}
+                        selectedBox={selectedBox}
+                        hoveredBox={hoveredBox}
+                        labels={labels}
+                        totalBoxes={selectedImage.annotations.boxes?.length || 0}
+                      />
+                    </ResizablePanel>
+                  </>
+                )}
+              </ResizablePanelGroup>
+
+              <ThumbnailGallery
+                images={images}
+                selectedImageId={selectedImageId}
+                onSelectImage={setSelectedImageId}
+              />
+            </div>
+          </ResizablePanel>
+        </ResizablePanelGroup>
       </div>
     </div>
   );
