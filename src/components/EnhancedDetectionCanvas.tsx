@@ -48,6 +48,7 @@ export const EnhancedDetectionCanvas = ({
   const [mode, setMode] = useState<InteractionMode>("draw");
   const [resizeHandle, setResizeHandle] = useState<ResizeHandle>(null);
   const [copiedBox, setCopiedBox] = useState<Omit<BoundingBox, "id"> | null>(null);
+  const [imageBounds, setImageBounds] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
 
   useEffect(() => {
     const img = new Image();
@@ -125,6 +126,14 @@ export const EnhancedDetectionCanvas = ({
     const offsetX = (canvas.width / zoom - scaledWidth) / 2;
     const offsetY = (canvas.height / zoom - scaledHeight) / 2;
 
+    // Store image bounds for coordinate clamping
+    setImageBounds({
+      x: offsetX,
+      y: offsetY,
+      width: scaledWidth,
+      height: scaledHeight,
+    });
+
     // Draw image
     ctx.drawImage(img, offsetX, offsetY, scaledWidth, scaledHeight);
 
@@ -189,14 +198,21 @@ export const EnhancedDetectionCanvas = ({
     ctx.restore();
   };
 
+  const clampToImage = (x: number, y: number) => {
+    if (!imageBounds) return { x, y };
+    return {
+      x: Math.max(imageBounds.x, Math.min(imageBounds.x + imageBounds.width, x)),
+      y: Math.max(imageBounds.y, Math.min(imageBounds.y + imageBounds.height, y)),
+    };
+  };
+
   const getCanvasCoordinates = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
     const rect = canvas.getBoundingClientRect();
-    return {
-      x: (e.clientX - rect.left - pan.x) / zoom,
-      y: (e.clientY - rect.top - pan.y) / zoom,
-    };
+    const x = (e.clientX - rect.left - pan.x) / zoom;
+    const y = (e.clientY - rect.top - pan.y) / zoom;
+    return clampToImage(x, y);
   };
 
   const getResizeHandle = (box: BoundingBox, point: { x: number; y: number }): ResizeHandle => {
@@ -277,7 +293,7 @@ export const EnhancedDetectionCanvas = ({
     // Handle resize
     if (resizeHandle && startPoint && selectedBoxId) {
       const box = boxes.find((b) => b.id === selectedBoxId);
-      if (!box) return;
+      if (!box || !imageBounds) return;
 
       const dx = coords.x - startPoint.x;
       const dy = coords.y - startPoint.y;
@@ -285,21 +301,24 @@ export const EnhancedDetectionCanvas = ({
       let newBox = { ...box };
 
       if (resizeHandle.includes("n")) {
-        newBox.y = box.y + dy;
-        newBox.height = box.height - dy;
+        newBox.y = Math.max(imageBounds.y, box.y + dy);
+        newBox.height = box.height - (newBox.y - box.y);
       }
       if (resizeHandle.includes("s")) {
-        newBox.height = box.height + dy;
+        newBox.height = Math.min(imageBounds.y + imageBounds.height - box.y, box.height + dy);
       }
       if (resizeHandle.includes("w")) {
-        newBox.x = box.x + dx;
-        newBox.width = box.width - dx;
+        newBox.x = Math.max(imageBounds.x, box.x + dx);
+        newBox.width = box.width - (newBox.x - box.x);
       }
       if (resizeHandle.includes("e")) {
-        newBox.width = box.width + dx;
+        newBox.width = Math.min(imageBounds.x + imageBounds.width - box.x, box.width + dx);
       }
 
-      onUpdateBox(selectedBoxId, newBox);
+      // Ensure minimum size
+      if (newBox.width > 5 && newBox.height > 5) {
+        onUpdateBox(selectedBoxId, newBox);
+      }
       setStartPoint(coords);
       return;
     }
@@ -307,14 +326,17 @@ export const EnhancedDetectionCanvas = ({
     // Handle move
     if (mode === "move" && startPoint && selectedBoxId) {
       const box = boxes.find((b) => b.id === selectedBoxId);
-      if (!box) return;
+      if (!box || !imageBounds) return;
 
       const dx = coords.x - startPoint.x;
       const dy = coords.y - startPoint.y;
 
+      const newX = Math.max(imageBounds.x, Math.min(imageBounds.x + imageBounds.width - box.width, box.x + dx));
+      const newY = Math.max(imageBounds.y, Math.min(imageBounds.y + imageBounds.height - box.height, box.y + dy));
+
       onUpdateBox(selectedBoxId, {
-        x: box.x + dx,
-        y: box.y + dy,
+        x: newX,
+        y: newY,
       });
       setStartPoint(coords);
       return;
@@ -361,11 +383,21 @@ export const EnhancedDetectionCanvas = ({
       return;
     }
 
-    if (isDrawing && currentBox && selectedLabelId && currentBox.width > 5 && currentBox.height > 5) {
-      onAddBox({
-        ...currentBox,
-        labelId: selectedLabelId,
-      });
+    if (isDrawing && currentBox && selectedLabelId && currentBox.width > 5 && currentBox.height > 5 && imageBounds) {
+      // Clamp the box to image bounds
+      const clampedBox = {
+        x: Math.max(imageBounds.x, currentBox.x),
+        y: Math.max(imageBounds.y, currentBox.y),
+        width: Math.min(imageBounds.x + imageBounds.width - Math.max(imageBounds.x, currentBox.x), currentBox.width),
+        height: Math.min(imageBounds.y + imageBounds.height - Math.max(imageBounds.y, currentBox.y), currentBox.height),
+      };
+      
+      if (clampedBox.width > 5 && clampedBox.height > 5) {
+        onAddBox({
+          ...clampedBox,
+          labelId: selectedLabelId,
+        });
+      }
     }
     setIsDrawing(false);
     setStartPoint(null);

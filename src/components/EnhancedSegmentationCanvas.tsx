@@ -30,6 +30,7 @@ export const EnhancedSegmentationCanvas = ({
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [lastPanPos, setLastPanPos] = useState({ x: 0, y: 0 });
+  const [imageBounds, setImageBounds] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -73,6 +74,14 @@ export const EnhancedSegmentationCanvas = ({
           normalized: { width: scaledWidth, height: scaledHeight },
         });
       }
+
+      // Store image bounds for coordinate clamping
+      setImageBounds({
+        x: offsetX,
+        y: offsetY,
+        width: scaledWidth,
+        height: scaledHeight,
+      });
 
       ctx.drawImage(img, offsetX, offsetY, scaledWidth, scaledHeight);
       ctx.restore();
@@ -149,13 +158,21 @@ export const EnhancedSegmentationCanvas = ({
     };
   };
 
+  const clampToImage = (x: number, y: number) => {
+    if (!imageBounds) return { x, y };
+    return {
+      x: Math.max(imageBounds.x, Math.min(imageBounds.x + imageBounds.width, x)),
+      y: Math.max(imageBounds.y, Math.min(imageBounds.y + imageBounds.height, y)),
+    };
+  };
+
   const getCanvasCoordinates = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
     const rect = canvas.getBoundingClientRect();
     const x = (e.clientX - rect.left - pan.x) / zoom;
     const y = (e.clientY - rect.top - pan.y) / zoom;
-    return { x, y };
+    return clampToImage(x, y);
   };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
