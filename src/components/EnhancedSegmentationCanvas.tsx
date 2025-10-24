@@ -30,6 +30,7 @@ export const EnhancedSegmentationCanvas = ({
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [lastPanPos, setLastPanPos] = useState({ x: 0, y: 0 });
+  const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
   const imageBoundsRef = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
 
   useEffect(() => {
@@ -134,6 +135,12 @@ export const EnhancedSegmentationCanvas = ({
           currentPoints.forEach((point, i) => {
             if (i > 0) ctx.lineTo(point.x, point.y);
           });
+          
+          // Draw preview line to mouse position
+          if (mousePos) {
+            ctx.lineTo(mousePos.x, mousePos.y);
+          }
+          
           ctx.strokeStyle = label.color;
           ctx.lineWidth = 2 / zoom;
           ctx.setLineDash([5 / zoom, 5 / zoom]);
@@ -151,6 +158,17 @@ export const EnhancedSegmentationCanvas = ({
             ctx.lineWidth = 1 / zoom;
             ctx.stroke();
           });
+          
+          // Draw preview point at mouse position
+          if (mousePos) {
+            ctx.beginPath();
+            ctx.arc(mousePos.x, mousePos.y, pointSize, 0, 2 * Math.PI);
+            ctx.fillStyle = label.color + "80";
+            ctx.fill();
+            ctx.strokeStyle = "#fff";
+            ctx.lineWidth = 1 / zoom;
+            ctx.stroke();
+          }
         }
       }
 
@@ -190,6 +208,10 @@ export const EnhancedSegmentationCanvas = ({
       const dy = e.clientY - lastPanPos.y;
       setPan({ x: pan.x + dx, y: pan.y + dy });
       setLastPanPos({ x: e.clientX, y: e.clientY });
+    } else if (currentPoints.length > 0 && selectedLabelId) {
+      // Update mouse position for preview
+      const coords = getCanvasCoordinates(e);
+      setMousePos(coords);
     }
   };
 

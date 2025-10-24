@@ -90,69 +90,30 @@ export const VideoAnnotationCanvas = ({
   return (
     <div className="w-full h-full flex flex-col bg-background">
       <div className="p-3 border-b bg-card flex items-center gap-2 flex-wrap">
-        <div className="flex items-center gap-2">
+        {frames.length === 0 && (
           <Button
             size="sm"
-            variant="secondary"
-            onClick={() => setShowFrameGrid(!showFrameGrid)}
-            className="h-8"
+            onClick={onExtractFrames}
+            className="h-8 bg-primary text-primary-foreground"
           >
-            {showFrameGrid ? <Film className="w-4 h-4" /> : <Grid3x3 className="w-4 h-4" />}
+            <Film className="w-4 h-4 mr-1" />
+            Extract Frames
           </Button>
-          {frames.length === 0 && (
-            <Button
-              size="sm"
-              onClick={onExtractFrames}
-              className="h-8 bg-primary text-primary-foreground"
-            >
-              <Film className="w-4 h-4 mr-1" />
-              Extract Frames
-            </Button>
-          )}
-        </div>
+        )}
         
         <div className="flex-1" />
         
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-muted-foreground px-2 py-1 rounded bg-muted">
-            {frames.length} frames extracted
-          </span>
-        </div>
+        {frames.length > 0 && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium text-muted-foreground px-2 py-1 rounded bg-muted">
+              {frames.length} frames extracted
+            </span>
+          </div>
+        )}
       </div>
 
       <div className="flex-1 relative bg-muted/20 flex items-center justify-center p-4">
-        {showFrameGrid && frames.length > 0 ? (
-          <ScrollArea className="w-full h-full">
-            <div className="grid grid-cols-4 gap-4 p-4">
-              {frames.map((frame) => (
-                <div
-                  key={frame.id}
-                  className={`relative aspect-video bg-background rounded-lg overflow-hidden border-2 cursor-pointer hover:border-primary transition-all ${
-                    frame.id === currentFrameId ? "border-primary ring-2 ring-primary" : "border-border"
-                  }`}
-                  onClick={() => {
-                    onFrameSelect(frame.id);
-                    setShowFrameGrid(false);
-                  }}
-                >
-                  <img
-                    src={frame.imageUrl}
-                    alt={`Frame ${frame.frameNumber}`}
-                    className="w-full h-full object-contain"
-                  />
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
-                    <p className="text-xs text-white font-medium">
-                      Frame {frame.frameNumber}
-                    </p>
-                    <p className="text-[10px] text-white/70">
-                      {formatTime(frame.timestamp)}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </ScrollArea>
-        ) : currentFrame ? (
+        {currentFrame ? (
           <img
             src={currentFrame.imageUrl}
             alt={`Frame ${currentFrame.frameNumber}`}

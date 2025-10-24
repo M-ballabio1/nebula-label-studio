@@ -15,6 +15,9 @@ import { ImageFilterBar } from "@/components/ImageFilterBar";
 import { BoxRecapPanel } from "@/components/BoxRecapPanel";
 import { PolygonRecapPanel } from "@/components/PolygonRecapPanel";
 import { TagRecapPanel } from "@/components/TagRecapPanel";
+import { VideoFramesSidebar } from "@/components/VideoFramesSidebar";
+import { AudioSegmentsList } from "@/components/AudioSegmentsList";
+import { AudioSidebar } from "@/components/AudioSidebar";
 import {
   AnnotationMode,
   Label,
@@ -475,101 +478,132 @@ const Index = () => {
     <div className="h-screen flex flex-col bg-background">
       <Header />
       <div className="flex-1 flex overflow-hidden">
-        <div className="w-80 border-r bg-card flex flex-col overflow-hidden">
-          {(mode === "video" || mode === "audio" || mode === "text") ? (
-            <LabelSidebar
-              labels={labels}
-              selectedLabelId={selectedLabelId}
-              onSelectLabel={setSelectedLabelId}
-              onAddLabel={handleAddLabel}
-              onDeleteLabel={handleDeleteLabel}
-            />
-          ) : mode === "classification" ? (
-            <LabelSidebarUnified
-              labels={labels}
-              selectedLabelId={selectedLabelId}
-              onSelectLabel={setSelectedLabelId}
-              onAddLabel={handleAddLabel}
-              onDeleteLabel={handleDeleteLabel}
-              isClassificationMode={true}
-              tags={selectedImage?.annotations.tags || []}
-              onToggleTag={handleToggleTag}
-            >
-              <div className="border-t p-4">
-                <h4 className="text-sm font-semibold mb-2">Image Info</h4>
-                <div className="text-xs text-muted-foreground space-y-1">
-                  <div>
-                    Original: {imageDimensions.width}x{imageDimensions.height}px
-                  </div>
-                </div>
-              </div>
-              {selectedImage && (
-                <TagRecapPanel
-                  tags={selectedImage.annotations.tags || []}
-                  labels={labels}
-                  onRemoveTag={handleToggleTag}
-                />
-              )}
-            </LabelSidebarUnified>
-          ) : (
-            <>
+        {mode === "video" ? (
+          <>
+            <div className="w-64">
               <LabelSidebar
                 labels={labels}
                 selectedLabelId={selectedLabelId}
                 onSelectLabel={setSelectedLabelId}
                 onAddLabel={handleAddLabel}
                 onDeleteLabel={handleDeleteLabel}
-                imageDimensions={mode === "detection" ? imageDimensions : mode === "segmentation" ? segmentationImageDimensions?.original : undefined}
-                normalizedDimensions={mode === "detection" ? normalizedDimensions : mode === "segmentation" ? segmentationImageDimensions?.normalized : undefined}
-                boxes={mode === "detection" && selectedImage ? selectedImage.annotations.boxes : undefined}
-                selectedBox={mode === "detection" ? selectedBox : undefined}
-                hoveredBox={mode === "detection" ? hoveredBox : undefined}
               />
-              {mode === "detection" && selectedImage && (
-                <BoxRecapPanel
-                  boxes={selectedImage.annotations.boxes || []}
+            </div>
+            <VideoFramesSidebar
+              frames={videoFrames}
+              currentFrameId={selectedFrameId}
+              onFrameSelect={handleFrameSelect}
+            />
+          </>
+        ) : mode === "audio" ? (
+          <AudioSidebar
+            labels={labels}
+            selectedLabelId={selectedLabelId}
+            onSelectLabel={setSelectedLabelId}
+            onAddLabel={handleAddLabel}
+            onDeleteLabel={handleDeleteLabel}
+            segments={audioSegments}
+            onDeleteSegment={handleDeleteAudioSegment}
+          />
+        ) : (
+          <div className="w-80 border-r bg-card flex flex-col overflow-hidden">
+            {mode === "classification" ? (
+              <LabelSidebarUnified
+                labels={labels}
+                selectedLabelId={selectedLabelId}
+                onSelectLabel={setSelectedLabelId}
+                onAddLabel={handleAddLabel}
+                onDeleteLabel={handleDeleteLabel}
+                isClassificationMode={true}
+                tags={selectedImage?.annotations.tags || []}
+                onToggleTag={handleToggleTag}
+              >
+                <div className="border-t p-4">
+                  <h4 className="text-sm font-semibold mb-2">Image Info</h4>
+                  <div className="text-xs text-muted-foreground space-y-1">
+                    <div>
+                      Original: {imageDimensions.width}x{imageDimensions.height}px
+                    </div>
+                  </div>
+                </div>
+                {selectedImage && (
+                  <TagRecapPanel
+                    tags={selectedImage.annotations.tags || []}
+                    labels={labels}
+                    onRemoveTag={handleToggleTag}
+                  />
+                )}
+              </LabelSidebarUnified>
+            ) : mode === "text" ? (
+              <LabelSidebar
+                labels={labels}
+                selectedLabelId={selectedLabelId}
+                onSelectLabel={setSelectedLabelId}
+                onAddLabel={handleAddLabel}
+                onDeleteLabel={handleDeleteLabel}
+              />
+            ) : (
+              <>
+                <LabelSidebar
                   labels={labels}
-                  selectedBoxId={selectedBox?.id || null}
-                  onSelectBox={(id) => {
-                    const box = selectedImage.annotations.boxes?.find((b) => b.id === id);
-                    if (box) setSelectedBox(box);
-                  }}
-                  onDeleteBox={handleDeleteBox}
+                  selectedLabelId={selectedLabelId}
+                  onSelectLabel={setSelectedLabelId}
+                  onAddLabel={handleAddLabel}
+                  onDeleteLabel={handleDeleteLabel}
+                  imageDimensions={mode === "detection" ? imageDimensions : mode === "segmentation" ? segmentationImageDimensions?.original : undefined}
+                  normalizedDimensions={mode === "detection" ? normalizedDimensions : mode === "segmentation" ? segmentationImageDimensions?.normalized : undefined}
+                  boxes={mode === "detection" && selectedImage ? selectedImage.annotations.boxes : undefined}
+                  selectedBox={mode === "detection" ? selectedBox : undefined}
+                  hoveredBox={mode === "detection" ? hoveredBox : undefined}
                 />
-              )}
-              {mode === "segmentation" && selectedImage && (
-                <PolygonRecapPanel
-                  polygons={selectedImage.annotations.polygons || []}
-                  labels={labels}
-                  imageDimensions={segmentationImageDimensions || undefined}
-                  onDeletePolygon={handleDeletePolygon}
-                />
-              )}
-            </>
-          )}
-        </div>
+                {mode === "detection" && selectedImage && (
+                  <BoxRecapPanel
+                    boxes={selectedImage.annotations.boxes || []}
+                    labels={labels}
+                    selectedBoxId={selectedBox?.id || null}
+                    onSelectBox={(id) => {
+                      const box = selectedImage.annotations.boxes?.find((b) => b.id === id);
+                      if (box) setSelectedBox(box);
+                    }}
+                    onDeleteBox={handleDeleteBox}
+                  />
+                )}
+                {mode === "segmentation" && selectedImage && (
+                  <PolygonRecapPanel
+                    polygons={selectedImage.annotations.polygons || []}
+                    labels={labels}
+                    imageDimensions={segmentationImageDimensions || undefined}
+                    onDeletePolygon={handleDeletePolygon}
+                  />
+                )}
+              </>
+            )}
+          </div>
+        )}
 
         <div className="flex-1 flex flex-col overflow-hidden">
           <AnnotationToolbar mode={mode} onModeChange={setMode} />
           
+          {(mode === "detection" || mode === "segmentation" || mode === "classification" || mode === "video" || mode === "audio" || mode === "text") && (
+            <ImageFilterBar
+              labels={labels}
+              selectedFilters={filters}
+              onFilterChange={setFilters}
+              gridMode={gridMode}
+              onGridModeChange={setGridMode}
+              mode={mode}
+            />
+          )}
+          
           {mode === "detection" && (
-            <>
-              <ImageFilterBar
-                labels={labels}
-                selectedFilters={filters}
-                onFilterChange={setFilters}
-                gridMode={gridMode}
-                onGridModeChange={setGridMode}
-              />
-              <ImageNavigationBar
-                currentImageName={selectedImage?.name || ""}
-                currentImagePath={selectedImage?.url || ""}
-                canGoPrevious={currentImageIndex > 0}
-                canGoNext={currentImageIndex < filteredImages.length - 1}
-                onPrevious={handlePreviousImage}
-                onNext={handleNextImage}
-              />
-            </>
+            <ImageNavigationBar
+              currentImageName={selectedImage?.name || ""}
+              currentImagePath={selectedImage?.url || ""}
+              canGoPrevious={currentImageIndex > 0}
+              canGoNext={currentImageIndex < filteredImages.length - 1}
+              onPrevious={handlePreviousImage}
+              onNext={handleNextImage}
+            />
           )}
 
           <div className="flex-1 overflow-auto bg-muted/20">
