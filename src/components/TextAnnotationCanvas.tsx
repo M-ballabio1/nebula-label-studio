@@ -1,7 +1,5 @@
-import { useState } from "react";
 import { TextAnnotation, Label } from "@/types/annotation";
-import { Trash2, Type } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Type } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface TextAnnotationCanvasProps {
@@ -10,7 +8,6 @@ interface TextAnnotationCanvasProps {
   labels: Label[];
   selectedLabelId: string | null;
   onAddAnnotation: (annotation: Omit<TextAnnotation, "id">) => void;
-  onDeleteAnnotation: (id: string) => void;
 }
 
 export const TextAnnotationCanvas = ({
@@ -19,11 +16,7 @@ export const TextAnnotationCanvas = ({
   labels,
   selectedLabelId,
   onAddAnnotation,
-  onDeleteAnnotation,
 }: TextAnnotationCanvasProps) => {
-  const [selection, setSelection] = useState<{ start: number; end: number } | null>(null);
-  const [hoveredAnnotationId, setHoveredAnnotationId] = useState<string | null>(null);
-
   const handleTextSelect = () => {
     const selectedText = window.getSelection();
     if (!selectedText || selectedText.rangeCount === 0 || !selectedLabelId) return;
@@ -45,12 +38,6 @@ export const TextAnnotationCanvas = ({
     });
 
     selectedText.removeAllRanges();
-  };
-
-  const getAnnotationForIndex = (index: number) => {
-    return annotations.find(
-      (ann) => index >= ann.startIndex && index < ann.endIndex
-    );
   };
 
   const renderAnnotatedText = () => {
@@ -77,16 +64,11 @@ export const TextAnnotationCanvas = ({
       spans.push(
         <span
           key={annotation.id}
-          className={`relative px-1 py-0.5 rounded cursor-pointer transition-all ${
-            hoveredAnnotationId === annotation.id ? "ring-2 ring-offset-1" : ""
-          }`}
+          className="relative px-1 py-0.5 rounded transition-all"
           style={{
             backgroundColor: label.color + "33",
             borderBottom: `2px solid ${label.color}`,
-            color: hoveredAnnotationId === annotation.id ? label.color : "inherit",
           }}
-          onMouseEnter={() => setHoveredAnnotationId(annotation.id)}
-          onMouseLeave={() => setHoveredAnnotationId(null)}
           title={label.name}
         >
           {annotation.text}
@@ -107,8 +89,8 @@ export const TextAnnotationCanvas = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-background">
-      <div className="p-4 border-b bg-card flex items-center justify-between">
+    <div className="flex-1 flex flex-col bg-background overflow-hidden">
+      <div className="p-4 border-b bg-card">
         <div className="flex items-center gap-2">
           <Type className="w-4 h-4 text-primary" />
           <span className="text-sm font-medium">
@@ -117,16 +99,6 @@ export const TextAnnotationCanvas = ({
               : "Select a label to start annotating"}
           </span>
         </div>
-        {hoveredAnnotationId && (
-          <Button
-            size="sm"
-            variant="destructive"
-            onClick={() => onDeleteAnnotation(hoveredAnnotationId)}
-          >
-            <Trash2 className="w-4 h-4 mr-1" />
-            Delete
-          </Button>
-        )}
       </div>
 
       <ScrollArea className="flex-1">
@@ -137,12 +109,6 @@ export const TextAnnotationCanvas = ({
           {renderAnnotatedText()}
         </div>
       </ScrollArea>
-
-      <div className="p-4 border-t bg-card">
-        <div className="text-sm text-muted-foreground">
-          {annotations.length} annotation{annotations.length !== 1 ? "s" : ""}
-        </div>
-      </div>
     </div>
   );
 };

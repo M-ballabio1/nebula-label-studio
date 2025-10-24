@@ -31,6 +31,7 @@ export const EnhancedSegmentationCanvas = ({
   const [isPanning, setIsPanning] = useState(false);
   const [lastPanPos, setLastPanPos] = useState({ x: 0, y: 0 });
   const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
+  const [isDrawing, setIsDrawing] = useState(false);
   const imageBoundsRef = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
 
   useEffect(() => {
@@ -199,6 +200,11 @@ export const EnhancedSegmentationCanvas = ({
       setIsPanning(true);
       setLastPanPos({ x: e.clientX, y: e.clientY });
       e.preventDefault();
+    } else if (e.button === 0 && selectedLabelId && !isPanning) {
+      setIsDrawing(true);
+      const coords = getCanvasCoordinates(e);
+      setCurrentPoints([coords]);
+      setMousePos(coords);
     }
   };
 
@@ -208,8 +214,23 @@ export const EnhancedSegmentationCanvas = ({
       const dy = e.clientY - lastPanPos.y;
       setPan({ x: pan.x + dx, y: pan.y + dy });
       setLastPanPos({ x: e.clientX, y: e.clientY });
+    } else if (isDrawing && selectedLabelId) {
+      const coords = getCanvasCoordinates(e);
+      setMousePos(coords);
+      
+      // Add point if moved enough distance from last point (fluid drawing)
+      if (currentPoints.length > 0) {
+        const lastPoint = currentPoints[currentPoints.length - 1];
+        const distance = Math.sqrt(
+          Math.pow(coords.x - lastPoint.x, 2) + Math.pow(coords.y - lastPoint.y, 2)
+        );
+        // Add point every 8 pixels for smooth drawing
+        if (distance > 8 / zoom) {
+          setCurrentPoints([...currentPoints, coords]);
+        }
+      }
     } else if (currentPoints.length > 0 && selectedLabelId) {
-      // Update mouse position for preview
+      // Update mouse position for preview when not drawing
       const coords = getCanvasCoordinates(e);
       setMousePos(coords);
     }
@@ -217,13 +238,7 @@ export const EnhancedSegmentationCanvas = ({
 
   const handleMouseUp = () => {
     setIsPanning(false);
-  };
-
-  const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!selectedLabelId || isPanning || e.shiftKey) return;
-
-    const coords = getCanvasCoordinates(e);
-    setCurrentPoints([...currentPoints, coords]);
+    setIsDrawing(false);
   };
 
   const handleComplete = () => {
@@ -288,12 +303,11 @@ export const EnhancedSegmentationCanvas = ({
       <div ref={containerRef} className="flex-1 w-full h-full relative">
         <canvas
           ref={canvasRef}
-          onClick={handleClick}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
-          className={`w-full h-full ${isPanning ? "cursor-grabbing" : "cursor-crosshair"}`}
+          className={`w-full h-full ${isPanning ? "cursor-grabbing" : isDrawing ? "cursor-crosshair" : "cursor-crosshair"}`}
           style={{ display: 'block' }}
         />
       </div>
@@ -301,7 +315,7 @@ export const EnhancedSegmentationCanvas = ({
       {/* Info overlay */}
       <div className="absolute bottom-4 left-4 bg-card/95 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg border text-xs text-muted-foreground">
         {selectedLabelId
-          ? "Click to add points • Complete when done"
+          ? "Click and drag to draw • Complete when done"
           : "Select a label to start drawing"}
         <br />
         Shift+Drag or Middle mouse to pan

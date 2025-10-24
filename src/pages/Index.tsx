@@ -15,9 +15,9 @@ import { ImageFilterBar } from "@/components/ImageFilterBar";
 import { BoxRecapPanel } from "@/components/BoxRecapPanel";
 import { PolygonRecapPanel } from "@/components/PolygonRecapPanel";
 import { TagRecapPanel } from "@/components/TagRecapPanel";
-import { VideoFramesSidebar } from "@/components/VideoFramesSidebar";
 import { AudioSegmentsList } from "@/components/AudioSegmentsList";
 import { AudioSidebar } from "@/components/AudioSidebar";
+import { TextAnnotationsList } from "@/components/TextAnnotationsList";
 import {
   AnnotationMode,
   Label,
@@ -479,22 +479,15 @@ const Index = () => {
       <Header />
       <div className="flex-1 flex overflow-hidden">
         {mode === "video" ? (
-          <>
-            <div className="w-64">
-              <LabelSidebar
-                labels={labels}
-                selectedLabelId={selectedLabelId}
-                onSelectLabel={setSelectedLabelId}
-                onAddLabel={handleAddLabel}
-                onDeleteLabel={handleDeleteLabel}
-              />
-            </div>
-            <VideoFramesSidebar
-              frames={videoFrames}
-              currentFrameId={selectedFrameId}
-              onFrameSelect={handleFrameSelect}
+          <div className="w-64">
+            <LabelSidebar
+              labels={labels}
+              selectedLabelId={selectedLabelId}
+              onSelectLabel={setSelectedLabelId}
+              onAddLabel={handleAddLabel}
+              onDeleteLabel={handleDeleteLabel}
             />
-          </>
+          </div>
         ) : mode === "audio" ? (
           <AudioSidebar
             labels={labels}
@@ -535,13 +528,20 @@ const Index = () => {
                 )}
               </LabelSidebarUnified>
             ) : mode === "text" ? (
-              <LabelSidebar
-                labels={labels}
-                selectedLabelId={selectedLabelId}
-                onSelectLabel={setSelectedLabelId}
-                onAddLabel={handleAddLabel}
-                onDeleteLabel={handleDeleteLabel}
-              />
+              <>
+                <LabelSidebar
+                  labels={labels}
+                  selectedLabelId={selectedLabelId}
+                  onSelectLabel={setSelectedLabelId}
+                  onAddLabel={handleAddLabel}
+                  onDeleteLabel={handleDeleteLabel}
+                />
+                <TextAnnotationsList
+                  annotations={textAnnotations}
+                  labels={labels}
+                  onDeleteAnnotation={handleDeleteTextAnnotation}
+                />
+              </>
             ) : (
               <>
                 <LabelSidebar
@@ -681,7 +681,6 @@ const Index = () => {
                     labels={labels}
                     selectedLabelId={selectedLabelId}
                     onAddAnnotation={handleAddTextAnnotation}
-                    onDeleteAnnotation={handleDeleteTextAnnotation}
                   />
                 )}
               </>
