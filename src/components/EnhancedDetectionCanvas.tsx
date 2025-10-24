@@ -119,7 +119,7 @@ export const EnhancedDetectionCanvas = ({
     // Draw image
     ctx.drawImage(img, 0, 0, canvas.width / zoom, canvas.height / zoom);
 
-    // Draw existing boxes
+    // Draw existing boxes - they scale with zoom automatically due to ctx.scale()
     boxes.forEach((box) => {
       const label = labels.find((l) => l.id === box.labelId);
       if (!label) return;
@@ -128,11 +128,12 @@ export const EnhancedDetectionCanvas = ({
       const isHovered = box.id === hoveredBoxId;
 
       ctx.strokeStyle = isSelected ? "#fff" : isHovered ? label.color : label.color;
-      ctx.lineWidth = isSelected ? 3 : isHovered ? 2.5 : 2;
+      ctx.lineWidth = (isSelected ? 3 : isHovered ? 2.5 : 2) / zoom;
       ctx.strokeRect(box.x, box.y, box.width, box.height);
 
       // Draw resize handles for selected box
       if (isSelected) {
+        const handleSize = 8 / zoom;
         const handles = [
           { x: box.x, y: box.y },
           { x: box.x + box.width, y: box.y },
@@ -145,20 +146,23 @@ export const EnhancedDetectionCanvas = ({
         ];
         ctx.fillStyle = "#fff";
         handles.forEach((handle) => {
-          ctx.fillRect(handle.x - 4, handle.y - 4, 8, 8);
+          ctx.fillRect(handle.x - handleSize / 2, handle.y - handleSize / 2, handleSize, handleSize);
         });
       }
 
       // Draw label background
       ctx.fillStyle = label.color;
       const labelText = label.name;
-      ctx.font = "12px sans-serif";
+      const fontSize = 12 / zoom;
+      ctx.font = `${fontSize}px sans-serif`;
       const textWidth = ctx.measureText(labelText).width;
-      ctx.fillRect(box.x, box.y - 20, textWidth + 8, 20);
+      const labelHeight = 20 / zoom;
+      const padding = 4 / zoom;
+      ctx.fillRect(box.x, box.y - labelHeight, textWidth + padding * 2, labelHeight);
 
       // Draw label text
       ctx.fillStyle = "#fff";
-      ctx.fillText(labelText, box.x + 4, box.y - 6);
+      ctx.fillText(labelText, box.x + padding, box.y - padding);
     });
 
     // Draw current box being drawn
@@ -166,8 +170,8 @@ export const EnhancedDetectionCanvas = ({
       const label = labels.find((l) => l.id === selectedLabelId);
       if (label) {
         ctx.strokeStyle = label.color;
-        ctx.lineWidth = 2;
-        ctx.setLineDash([5, 5]);
+        ctx.lineWidth = 2 / zoom;
+        ctx.setLineDash([5 / zoom, 5 / zoom]);
         ctx.strokeRect(currentBox.x, currentBox.y, currentBox.width, currentBox.height);
         ctx.setLineDash([]);
       }

@@ -5,12 +5,14 @@ import { AnnotationToolbar } from "@/components/AnnotationToolbar";
 import { ThumbnailGallery } from "@/components/ThumbnailGallery";
 import { EnhancedDetectionCanvas } from "@/components/EnhancedDetectionCanvas";
 import { ClassificationPanel } from "@/components/ClassificationPanel";
-import { SegmentationCanvas } from "@/components/SegmentationCanvas";
+import { EnhancedSegmentationCanvas } from "@/components/EnhancedSegmentationCanvas";
 import { AudioAnnotationCanvas } from "@/components/AudioAnnotationCanvas";
 import { TextAnnotationCanvas } from "@/components/TextAnnotationCanvas";
 import { ImageNavigationBar } from "@/components/ImageNavigationBar";
 import { ImageFilterBar } from "@/components/ImageFilterBar";
 import { BoxRecapPanel } from "@/components/BoxRecapPanel";
+import { PolygonRecapPanel } from "@/components/PolygonRecapPanel";
+import { TagRecapPanel } from "@/components/TagRecapPanel";
 import {
   AnnotationMode,
   Label,
@@ -86,6 +88,10 @@ const Index = () => {
   const [normalizedDimensions, setNormalizedDimensions] = useState({ width: 0, height: 0 });
   const [selectedBox, setSelectedBox] = useState<BoundingBox | null>(null);
   const [hoveredBox, setHoveredBox] = useState<BoundingBox | null>(null);
+  const [segmentationImageDimensions, setSegmentationImageDimensions] = useState<{
+    original: { width: number; height: number };
+    normalized: { width: number; height: number };
+  } | null>(null);
   const [filters, setFilters] = useState<{ annotated: boolean | null; labelIds: string[] }>({
     annotated: null,
     labelIds: [],
@@ -361,6 +367,21 @@ const Index = () => {
               onDeleteBox={handleDeleteBox}
             />
           )}
+          {mode === "segmentation" && selectedImage && (
+            <PolygonRecapPanel
+              polygons={selectedImage.annotations.polygons || []}
+              labels={labels}
+              imageDimensions={segmentationImageDimensions || undefined}
+              onDeletePolygon={handleDeletePolygon}
+            />
+          )}
+          {mode === "classification" && selectedImage && (
+            <TagRecapPanel
+              tags={selectedImage.annotations.tags || []}
+              labels={labels}
+              onRemoveTag={handleToggleTag}
+            />
+          )}
         </div>
 
         <div className="flex-1 flex flex-col overflow-hidden">
@@ -421,13 +442,14 @@ const Index = () => {
                   />
                 )}
                 {selectedImage && mode === "segmentation" && (
-                  <SegmentationCanvas
+                  <EnhancedSegmentationCanvas
                     imageUrl={selectedImage.url}
                     polygons={selectedImage.annotations.polygons || []}
                     labels={labels}
                     selectedLabelId={selectedLabelId}
                     onAddPolygon={handleAddPolygon}
                     onDeletePolygon={handleDeletePolygon}
+                    onImageDimensions={setSegmentationImageDimensions}
                   />
                 )}
                 {mode === "audio" && (
