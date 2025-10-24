@@ -58,13 +58,14 @@ export const EnhancedSegmentationCanvas = ({
     const img = new Image();
     img.src = imageUrl;
     img.onload = () => {
-      const maxWidth = canvas.width * 0.9;
-      const maxHeight = canvas.height * 0.9;
+      // Calculate scale to fit image in viewport similar to detection canvas
+      const maxWidth = (canvas.width / zoom) * 0.95;
+      const maxHeight = (canvas.height / zoom) * 0.95;
       const scale = Math.min(maxWidth / img.width, maxHeight / img.height);
       const scaledWidth = img.width * scale;
       const scaledHeight = img.height * scale;
-      const offsetX = (canvas.width - scaledWidth) / 2;
-      const offsetY = (canvas.height - scaledHeight) / 2;
+      const offsetX = ((canvas.width / zoom) - scaledWidth) / 2;
+      const offsetY = ((canvas.height / zoom) - scaledHeight) / 2;
 
       if (onImageDimensions) {
         onImageDimensions({
@@ -203,7 +204,7 @@ export const EnhancedSegmentationCanvas = ({
   const handleZoomOut = () => setZoom(Math.max(zoom - 0.5, 0.5));
 
   return (
-    <div className="flex-1 flex flex-col bg-muted/30 relative">
+    <div className="w-full h-full flex flex-col bg-background relative">
       {/* Top toolbar */}
       <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 bg-card/95 backdrop-blur-sm px-4 py-2 rounded-lg shadow-lg border">
         <Button size="sm" variant="outline" onClick={handleZoomOut}>
@@ -244,7 +245,7 @@ export const EnhancedSegmentationCanvas = ({
       </div>
 
       {/* Canvas */}
-      <div ref={containerRef} className="flex-1 overflow-hidden flex items-center justify-center">
+      <div ref={containerRef} className="flex-1 w-full h-full relative">
         <canvas
           ref={canvasRef}
           onClick={handleClick}
@@ -252,7 +253,8 @@ export const EnhancedSegmentationCanvas = ({
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
-          className={isPanning ? "cursor-grabbing" : "cursor-crosshair"}
+          className={`w-full h-full ${isPanning ? "cursor-grabbing" : "cursor-crosshair"}`}
+          style={{ display: 'block' }}
         />
       </div>
 

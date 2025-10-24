@@ -362,6 +362,10 @@ const Index = () => {
   const displayImages = gridMode === "single" ? [selectedImage].filter(Boolean) : 
     filteredImages.slice(0, gridMode === "grid2" ? 4 : gridMode === "grid4" ? 8 : 16);
 
+  const handleImageSelect = (imageId: string) => {
+    setSelectedImageId(imageId);
+  };
+
   return (
     <div className="h-screen flex flex-col bg-background">
       <Header />
@@ -539,25 +543,124 @@ const Index = () => {
                 {displayImages.map((img) => (
                   <div
                     key={img.id}
-                    className="relative aspect-video bg-background rounded-lg overflow-hidden border-2 cursor-pointer hover:border-primary transition-all"
-                    onClick={() => {
-                      setSelectedImageId(img.id);
-                      setGridMode("single");
-                    }}
+                    className={`relative bg-card rounded-lg overflow-hidden border-2 transition-all ${
+                      selectedImageId === img.id ? 'border-primary shadow-lg' : 'border-border hover:border-primary/50'
+                    }`}
+                    style={{ minHeight: '300px' }}
                   >
-                    <img
-                      src={img.url}
-                      alt={img.name}
-                      className="w-full h-full object-contain"
+                    {mode === "detection" && (
+                      <EnhancedDetectionCanvas
+                        imageUrl={img.url}
+                        boxes={img.annotations.boxes || []}
+                        labels={labels}
+                        selectedLabelId={selectedLabelId}
+                        onAddBox={(box) => {
+                          setSelectedImageId(img.id);
+                          const newBox: BoundingBox = {
+                            ...box,
+                            id: `box-${Date.now()}`,
+                          };
+                          setImages(
+                            images.map((image) =>
+                              image.id === img.id
+                                ? {
+                                    ...image,
+                                    annotations: {
+                                      ...image.annotations,
+                                      boxes: [...(image.annotations.boxes || []), newBox],
+                                    },
+                                  }
+                                : image
+                            )
+                          );
+                        }}
+                        onDeleteBox={(id) => {
+                          setImages(
+                            images.map((image) =>
+                              image.id === img.id
+                                ? {
+                                    ...image,
+                                    annotations: {
+                                      ...image.annotations,
+                                      boxes: (image.annotations.boxes || []).filter((b) => b.id !== id),
+                                    },
+                                  }
+                                : image
+                            )
+                          );
+                        }}
+                        onUpdateBox={(id, updates) => {
+                          setImages(
+                            images.map((image) =>
+                              image.id === img.id
+                                ? {
+                                    ...image,
+                                    annotations: {
+                                      ...image.annotations,
+                                      boxes: (image.annotations.boxes || []).map((b) =>
+                                        b.id === id ? { ...b, ...updates } : b
+                                      ),
+                                    },
+                                  }
+                                : image
+                            )
+                          );
+                        }}
+                        onImageLoad={(dims) => {
+                          if (selectedImageId === img.id) {
+                            setImageDimensions(dims);
+                            setNormalizedDimensions(dims);
+                          }
+                        }}
+                        onBoxSelect={(box) => {
+                          setSelectedImageId(img.id);
+                          setSelectedBox(box);
+                        }}
+                        onBoxHover={(box) => {
+                          if (selectedImageId === img.id) setHoveredBox(box);
+                        }}
+                      />
+                    )}
+                    {mode === "classification" && (
+                      <>
+                        <ClassificationPanel
+                          imageUrl={img.url}
+                          tags={img.annotations.tags || []}
+                          labels={labels}
+                          onToggleTag={(labelId) => {
+                            setSelectedImageId(img.id);
+                            setImages(
+                              images.map((image) => {
+                                if (image.id !== img.id) return image;
+                                const tags = image.annotations.tags || [];
+                                const hasTag = tags.some((t) => t.labelId === labelId);
+                                return {
+                                  ...image,
+                                  annotations: {
+                                    ...image.annotations,
+                                    tags: hasTag
+                                      ? tags.filter((t) => t.labelId !== labelId)
+                                      : [...tags, { labelId }],
+                                  },
+                                };
+                              })
+                            );
+                          }}
+                        />
+                        <div className="absolute bottom-2 left-2 right-2 bg-card/90 backdrop-blur-sm px-2 py-1 rounded text-xs">
+                          <div className="font-medium truncate">{img.name}</div>
+                          <div className="text-muted-foreground">
+                            {img.annotations.tags?.length || 0} tags
+                          </div>
+                        </div>
+                      </>
+                    )}
+                    <div 
+                      className="absolute inset-0 pointer-events-none border-2 rounded-lg transition-all"
+                      style={{ 
+                        borderColor: selectedImageId === img.id ? 'hsl(var(--primary))' : 'transparent' 
+                      }}
                     />
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
-                      <p className="text-xs text-white font-medium">{img.name}</p>
-                      <p className="text-[10px] text-white/70">
-                        {(img.annotations.boxes?.length || 0) + 
-                         (img.annotations.polygons?.length || 0) + 
-                         (img.annotations.tags?.length || 0)} annotations
-                      </p>
-                    </div>
                   </div>
                 ))}
               </div>
