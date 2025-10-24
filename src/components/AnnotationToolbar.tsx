@@ -30,8 +30,8 @@ export const AnnotationToolbar = ({ mode, onModeChange }: AnnotationToolbarProps
             onClick={() => onModeChange(tool.mode)}
             className={
               isActive
-                ? "bg-gradient-hero glow-primary"
-                : "hover:bg-accent"
+                ? "bg-primary text-primary-foreground hover:bg-primary/90 glow-primary border-primary"
+                : "bg-secondary text-secondary-foreground hover:bg-secondary/80 border-border"
             }
           >
             <Icon className="w-4 h-4 mr-2" />

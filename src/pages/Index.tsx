@@ -8,7 +8,6 @@ import { ClassificationPanel } from "@/components/ClassificationPanel";
 import { SegmentationCanvas } from "@/components/SegmentationCanvas";
 import { AudioAnnotationCanvas } from "@/components/AudioAnnotationCanvas";
 import { TextAnnotationCanvas } from "@/components/TextAnnotationCanvas";
-import { ImageInfoPanel } from "@/components/ImageInfoPanel";
 import {
   ResizablePanelGroup,
   ResizablePanel,
@@ -259,103 +258,90 @@ const Index = () => {
       <Header />
       <div className="flex-1 flex overflow-hidden">
         <ResizablePanelGroup direction="horizontal" className="w-full">
-          <ResizablePanel defaultSize={20} minSize={15} maxSize={30}>
+          <ResizablePanel defaultSize={22} minSize={18} maxSize={35}>
             <LabelSidebar
               labels={labels}
               selectedLabelId={selectedLabelId}
               onSelectLabel={setSelectedLabelId}
               onAddLabel={handleAddLabel}
               onDeleteLabel={handleDeleteLabel}
+              imageDimensions={mode === "detection" ? imageDimensions : undefined}
+              normalizedDimensions={mode === "detection" ? normalizedDimensions : undefined}
+              boxes={mode === "detection" && selectedImage ? selectedImage.annotations.boxes : undefined}
+              selectedBox={mode === "detection" ? selectedBox : undefined}
+              hoveredBox={mode === "detection" ? hoveredBox : undefined}
             />
           </ResizablePanel>
           
           <ResizableHandle withHandle />
           
-          <ResizablePanel defaultSize={80} minSize={50}>
+          <ResizablePanel defaultSize={78} minSize={50}>
             <div className="h-full flex flex-col">
               <AnnotationToolbar mode={mode} onModeChange={setMode} />
               
-              <ResizablePanelGroup direction="vertical" className="flex-1">
-                <ResizablePanel defaultSize={75} minSize={40}>
-                  {selectedImage && mode === "detection" && (
-                    <EnhancedDetectionCanvas
-                      imageUrl={selectedImage.url}
-                      boxes={selectedImage.annotations.boxes || []}
-                      labels={labels}
-                      selectedLabelId={selectedLabelId}
-                      onAddBox={handleAddBox}
-                      onDeleteBox={handleDeleteBox}
-                      onUpdateBox={handleUpdateBox}
-                      onImageLoad={(dims) => {
-                        setImageDimensions(dims);
-                        const canvas = document.querySelector("canvas");
-                        if (canvas) {
-                          setNormalizedDimensions({
-                            width: canvas.width,
-                            height: canvas.height,
-                          });
-                        }
-                      }}
-                      onBoxSelect={setSelectedBox}
-                      onBoxHover={setHoveredBox}
-                    />
-                  )}
-                  {selectedImage && mode === "classification" && (
-                    <ClassificationPanel
-                      imageUrl={selectedImage.url}
-                      tags={selectedImage.annotations.tags || []}
-                      labels={labels}
-                      onToggleTag={handleToggleTag}
-                    />
-                  )}
-                  {selectedImage && mode === "segmentation" && (
-                    <SegmentationCanvas
-                      imageUrl={selectedImage.url}
-                      polygons={selectedImage.annotations.polygons || []}
-                      labels={labels}
-                      selectedLabelId={selectedLabelId}
-                      onAddPolygon={handleAddPolygon}
-                      onDeletePolygon={handleDeletePolygon}
-                    />
-                  )}
-                  {mode === "audio" && (
-                    <AudioAnnotationCanvas
-                      audioUrl={SAMPLE_AUDIO_URL}
-                      segments={audioSegments}
-                      labels={labels}
-                      selectedLabelId={selectedLabelId}
-                      onAddSegment={handleAddAudioSegment}
-                      onDeleteSegment={handleDeleteAudioSegment}
-                    />
-                  )}
-                  {mode === "text" && (
-                    <TextAnnotationCanvas
-                      text={SAMPLE_TEXT}
-                      annotations={textAnnotations}
-                      labels={labels}
-                      selectedLabelId={selectedLabelId}
-                      onAddAnnotation={handleAddTextAnnotation}
-                      onDeleteAnnotation={handleDeleteTextAnnotation}
-                    />
-                  )}
-                </ResizablePanel>
-
-                {mode === "detection" && selectedImage && (
-                  <>
-                    <ResizableHandle />
-                    <ResizablePanel defaultSize={25} minSize={15} maxSize={40}>
-                      <ImageInfoPanel
-                        imageDimensions={imageDimensions}
-                        normalizedDimensions={normalizedDimensions}
-                        selectedBox={selectedBox}
-                        hoveredBox={hoveredBox}
-                        labels={labels}
-                        totalBoxes={selectedImage.annotations.boxes?.length || 0}
-                      />
-                    </ResizablePanel>
-                  </>
+              <div className="flex-1 overflow-hidden">
+                {selectedImage && mode === "detection" && (
+                  <EnhancedDetectionCanvas
+                    imageUrl={selectedImage.url}
+                    boxes={selectedImage.annotations.boxes || []}
+                    labels={labels}
+                    selectedLabelId={selectedLabelId}
+                    onAddBox={handleAddBox}
+                    onDeleteBox={handleDeleteBox}
+                    onUpdateBox={handleUpdateBox}
+                    onImageLoad={(dims) => {
+                      setImageDimensions(dims);
+                      const canvas = document.querySelector("canvas");
+                      if (canvas) {
+                        setNormalizedDimensions({
+                          width: canvas.width,
+                          height: canvas.height,
+                        });
+                      }
+                    }}
+                    onBoxSelect={setSelectedBox}
+                    onBoxHover={setHoveredBox}
+                  />
                 )}
-              </ResizablePanelGroup>
+                {selectedImage && mode === "classification" && (
+                  <ClassificationPanel
+                    imageUrl={selectedImage.url}
+                    tags={selectedImage.annotations.tags || []}
+                    labels={labels}
+                    onToggleTag={handleToggleTag}
+                  />
+                )}
+                {selectedImage && mode === "segmentation" && (
+                  <SegmentationCanvas
+                    imageUrl={selectedImage.url}
+                    polygons={selectedImage.annotations.polygons || []}
+                    labels={labels}
+                    selectedLabelId={selectedLabelId}
+                    onAddPolygon={handleAddPolygon}
+                    onDeletePolygon={handleDeletePolygon}
+                  />
+                )}
+                {mode === "audio" && (
+                  <AudioAnnotationCanvas
+                    audioUrl={SAMPLE_AUDIO_URL}
+                    segments={audioSegments}
+                    labels={labels}
+                    selectedLabelId={selectedLabelId}
+                    onAddSegment={handleAddAudioSegment}
+                    onDeleteSegment={handleDeleteAudioSegment}
+                  />
+                )}
+                {mode === "text" && (
+                  <TextAnnotationCanvas
+                    text={SAMPLE_TEXT}
+                    annotations={textAnnotations}
+                    labels={labels}
+                    selectedLabelId={selectedLabelId}
+                    onAddAnnotation={handleAddTextAnnotation}
+                    onDeleteAnnotation={handleDeleteTextAnnotation}
+                  />
+                )}
+              </div>
 
               <ThumbnailGallery
                 images={images}

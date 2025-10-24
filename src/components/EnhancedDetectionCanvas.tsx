@@ -368,24 +368,51 @@ export const EnhancedDetectionCanvas = ({
   const selectedBox = boxes.find((b) => b.id === selectedBoxId);
 
   return (
-    <div className="flex-1 flex flex-col bg-muted/30">
-      <div className="p-2 border-b bg-card flex items-center gap-2">
-        <Button size="sm" variant="secondary" onClick={() => setZoom((z) => Math.min(5, z * 1.2))}>
-          <ZoomIn className="w-4 h-4" />
-        </Button>
-        <Button size="sm" variant="secondary" onClick={() => setZoom((z) => Math.max(0.5, z / 1.2))}>
-          <ZoomOut className="w-4 h-4" />
-        </Button>
-        <Button size="sm" variant="secondary" onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }); }}>
-          <RotateCcw className="w-4 h-4 mr-1" />
-          Reset
-        </Button>
+    <div className="flex-1 flex flex-col bg-background">
+      <div className="p-3 border-b bg-card flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2">
+          <Button 
+            size="sm" 
+            variant="secondary" 
+            onClick={() => setZoom((z) => Math.min(5, z * 1.2))}
+            className="h-8"
+          >
+            <ZoomIn className="w-4 h-4" />
+          </Button>
+          <Button 
+            size="sm" 
+            variant="secondary" 
+            onClick={() => setZoom((z) => Math.max(0.5, z / 1.2))}
+            className="h-8"
+          >
+            <ZoomOut className="w-4 h-4" />
+          </Button>
+          <Button 
+            size="sm" 
+            variant="secondary" 
+            onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }); }}
+            className="h-8"
+          >
+            <RotateCcw className="w-4 h-4 mr-1" />
+            Reset
+          </Button>
+        </div>
+        
         <div className="flex-1" />
-        <span className="text-xs text-muted-foreground">
-          Zoom: {Math.round(zoom * 100)}%
-        </span>
+        
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium text-muted-foreground px-2 py-1 rounded bg-muted">
+            Zoom: {Math.round(zoom * 100)}%
+          </span>
+          {selectedLabelId && (
+            <span className="text-xs font-medium text-primary px-2 py-1 rounded bg-primary/10 border border-primary/20">
+              Drawing: {labels.find((l) => l.id === selectedLabelId)?.name}
+            </span>
+          )}
+        </div>
+        
         {selectedBox && (
-          <>
+          <div className="flex items-center gap-2">
             <Button
               size="sm"
               variant="secondary"
@@ -399,8 +426,10 @@ export const EnhancedDetectionCanvas = ({
                 });
                 toast.success("Box copied");
               }}
+              className="h-8"
             >
-              <Copy className="w-4 h-4" />
+              <Copy className="w-4 h-4 mr-1" />
+              Copy
             </Button>
             <Button
               size="sm"
@@ -409,13 +438,15 @@ export const EnhancedDetectionCanvas = ({
                 onDeleteBox(selectedBoxId!);
                 setSelectedBoxId(null);
               }}
+              className="h-8"
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-4 h-4 mr-1" />
+              Delete
             </Button>
-          </>
+          </div>
         )}
       </div>
-      <div ref={containerRef} className="flex-1 overflow-hidden relative">
+      <div ref={containerRef} className="flex-1 overflow-hidden relative bg-muted/20">
         <canvas
           ref={canvasRef}
           onMouseDown={handleMouseDown}
@@ -423,7 +454,7 @@ export const EnhancedDetectionCanvas = ({
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
           onWheel={handleWheel}
-          className="cursor-crosshair"
+          className="w-full h-full"
           style={{ 
             cursor: isPanning ? "grabbing" : 
                     resizeHandle ? "nwse-resize" : 
