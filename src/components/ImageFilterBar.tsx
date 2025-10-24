@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-type GridMode = "single" | "grid2" | "grid4" | "grid8";
+type GridMode = "single" | "grid4" | "grid6" | "grid8";
 
 interface ImageFilterBarProps {
   labels: Label[];
@@ -108,17 +108,9 @@ export const ImageFilterBar = ({
           size="sm"
           variant={gridMode === "single" ? "default" : "secondary"}
           onClick={() => onGridModeChange("single")}
-          className="h-8 w-8 p-0"
+          className="h-8 px-2.5"
         >
-          <Grid2X2 className="w-4 h-4" />
-        </Button>
-        <Button
-          size="sm"
-          variant={gridMode === "grid2" ? "default" : "secondary"}
-          onClick={() => onGridModeChange("grid2")}
-          className="h-8 px-2"
-        >
-          2x2
+          1
         </Button>
         <Button
           size="sm"
@@ -126,7 +118,15 @@ export const ImageFilterBar = ({
           onClick={() => onGridModeChange("grid4")}
           className="h-8 px-2"
         >
-          2x4
+          2×2
+        </Button>
+        <Button
+          size="sm"
+          variant={gridMode === "grid6" ? "default" : "secondary"}
+          onClick={() => onGridModeChange("grid6")}
+          className="h-8 px-2"
+        >
+          2×3
         </Button>
         <Button
           size="sm"
@@ -134,7 +134,7 @@ export const ImageFilterBar = ({
           onClick={() => onGridModeChange("grid8")}
           className="h-8 px-2"
         >
-          4x4
+          2×4
         </Button>
       </div>
     </div>

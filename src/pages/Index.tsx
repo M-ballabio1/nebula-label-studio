@@ -72,13 +72,118 @@ const SAMPLE_IMAGES: ImageItem[] = [
     name: "Sunset Beach",
     annotations: { boxes: [], polygons: [], tags: [] },
   },
+  {
+    id: "img6",
+    url: "https://images.unsplash.com/photo-1514924013411-cbf25faa35bb?w=800&h=600&fit=crop",
+    thumbnailUrl: "https://images.unsplash.com/photo-1514924013411-cbf25faa35bb?w=120&h=120&fit=crop",
+    name: "Dining Room",
+    annotations: { boxes: [], polygons: [], tags: [] },
+  },
+  {
+    id: "img7",
+    url: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&h=600&fit=crop",
+    thumbnailUrl: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=120&h=120&fit=crop",
+    name: "Mountain Peak",
+    annotations: { boxes: [], polygons: [], tags: [] },
+  },
+  {
+    id: "img8",
+    url: "https://images.unsplash.com/photo-1493246507139-91e8fad9978e?w=800&h=600&fit=crop",
+    thumbnailUrl: "https://images.unsplash.com/photo-1493246507139-91e8fad9978e?w=120&h=120&fit=crop",
+    name: "Mountain Reflection",
+    annotations: { boxes: [], polygons: [], tags: [] },
+  },
+  {
+    id: "img9",
+    url: "https://images.unsplash.com/photo-1426604966848-d7adac402bff?w=800&h=600&fit=crop",
+    thumbnailUrl: "https://images.unsplash.com/photo-1426604966848-d7adac402bff?w=120&h=120&fit=crop",
+    name: "Forest Trail",
+    annotations: { boxes: [], polygons: [], tags: [] },
+  },
+  {
+    id: "img10",
+    url: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800&h=600&fit=crop",
+    thumbnailUrl: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=120&h=120&fit=crop",
+    name: "Foggy Mountains",
+    annotations: { boxes: [], polygons: [], tags: [] },
+  },
+  {
+    id: "img11",
+    url: "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=800&h=600&fit=crop",
+    thumbnailUrl: "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=120&h=120&fit=crop",
+    name: "Autumn Road",
+    annotations: { boxes: [], polygons: [], tags: [] },
+  },
+  {
+    id: "img12",
+    url: "https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=800&h=600&fit=crop",
+    thumbnailUrl: "https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=120&h=120&fit=crop",
+    name: "Mountain Lake",
+    annotations: { boxes: [], polygons: [], tags: [] },
+  },
+  {
+    id: "img13",
+    url: "https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?w=800&h=600&fit=crop",
+    thumbnailUrl: "https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?w=120&h=120&fit=crop",
+    name: "Beach Waves",
+    annotations: { boxes: [], polygons: [], tags: [] },
+  },
+  {
+    id: "img14",
+    url: "https://images.unsplash.com/photo-1511593358241-7eea1f3c84e5?w=800&h=600&fit=crop",
+    thumbnailUrl: "https://images.unsplash.com/photo-1511593358241-7eea1f3c84e5?w=120&h=120&fit=crop",
+    name: "Desert Road",
+    annotations: { boxes: [], polygons: [], tags: [] },
+  },
+  {
+    id: "img15",
+    url: "https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?w=800&h=600&fit=crop",
+    thumbnailUrl: "https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?w=120&h=120&fit=crop",
+    name: "Ice Mountains",
+    annotations: { boxes: [], polygons: [], tags: [] },
+  },
+  {
+    id: "img16",
+    url: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800&h=600&fit=crop",
+    thumbnailUrl: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=120&h=120&fit=crop",
+    name: "Valley View",
+    annotations: { boxes: [], polygons: [], tags: [] },
+  },
+  {
+    id: "img17",
+    url: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&h=600&fit=crop",
+    thumbnailUrl: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=120&h=120&fit=crop",
+    name: "Green Forest",
+    annotations: { boxes: [], polygons: [], tags: [] },
+  },
+  {
+    id: "img18",
+    url: "https://images.unsplash.com/photo-1475924156734-496f6cac6ec1?w=800&h=600&fit=crop",
+    thumbnailUrl: "https://images.unsplash.com/photo-1475924156734-496f6cac6ec1?w=120&h=120&fit=crop",
+    name: "Northern Lights",
+    annotations: { boxes: [], polygons: [], tags: [] },
+  },
+  {
+    id: "img19",
+    url: "https://images.unsplash.com/photo-1496275068113-fff8c90750d1?w=800&h=600&fit=crop",
+    thumbnailUrl: "https://images.unsplash.com/photo-1496275068113-fff8c90750d1?w=120&h=120&fit=crop",
+    name: "Ocean Sunset",
+    annotations: { boxes: [], polygons: [], tags: [] },
+  },
+  {
+    id: "img20",
+    url: "https://images.unsplash.com/photo-1482192505345-5655af888cc4?w=800&h=600&fit=crop",
+    thumbnailUrl: "https://images.unsplash.com/photo-1482192505345-5655af888cc4?w=120&h=120&fit=crop",
+    name: "Snow Peak",
+    annotations: { boxes: [], polygons: [], tags: [] },
+  },
 ];
 
 const SAMPLE_AUDIO_URL = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
 const SAMPLE_VIDEO_URL = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
 const SAMPLE_TEXT = "Natural Language Processing (NLP) is a subfield of artificial intelligence that focuses on the interaction between computers and humans through natural language. The ultimate objective of NLP is to read, decipher, understand, and make sense of human languages in a manner that is valuable. Most NLP techniques rely on machine learning to derive meaning from human languages. NLP is used to apply algorithms to identify and extract the natural language rules such that unstructured language data is converted into a form that computers can understand.";
 
-type GridMode = "single" | "grid2" | "grid4" | "grid8";
+type GridMode = "single" | "grid4" | "grid6" | "grid8";
 
 const Index = () => {
   const [mode, setMode] = useState<AnnotationMode>("detection");
@@ -348,19 +453,19 @@ const Index = () => {
 
   const getGridClass = () => {
     switch (gridMode) {
-      case "grid2":
-        return "grid grid-cols-2 gap-2";
       case "grid4":
-        return "grid grid-cols-2 gap-2";
+        return "grid grid-cols-2 gap-3";
+      case "grid6":
+        return "grid grid-cols-3 gap-3";
       case "grid8":
-        return "grid grid-cols-4 gap-2";
+        return "grid grid-cols-4 gap-3";
       default:
         return "";
     }
   };
 
   const displayImages = gridMode === "single" ? [selectedImage].filter(Boolean) : 
-    filteredImages.slice(0, gridMode === "grid2" ? 4 : gridMode === "grid4" ? 8 : 16);
+    filteredImages.slice(0, gridMode === "grid4" ? 4 : gridMode === "grid6" ? 6 : 8);
 
   const handleImageSelect = (imageId: string) => {
     setSelectedImageId(imageId);
@@ -546,7 +651,7 @@ const Index = () => {
                     className={`relative bg-card rounded-lg overflow-hidden border-2 transition-all ${
                       selectedImageId === img.id ? 'border-primary shadow-lg' : 'border-border hover:border-primary/50'
                     }`}
-                    style={{ minHeight: '300px' }}
+                    style={{ minHeight: gridMode === "grid6" ? '350px' : gridMode === "grid8" ? '300px' : '400px' }}
                   >
                     {mode === "detection" && (
                       <EnhancedDetectionCanvas
