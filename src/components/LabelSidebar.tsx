@@ -63,7 +63,7 @@ export const LabelSidebar = ({
   };
 
   return (
-    <div className="w-72 border-r bg-card flex flex-col h-full">
+    <div className="border-r bg-card flex flex-col h-full overflow-hidden">
       <div className="p-4 border-b">
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-semibold flex items-center gap-2">

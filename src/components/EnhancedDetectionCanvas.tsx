@@ -368,7 +368,7 @@ export const EnhancedDetectionCanvas = ({
   const selectedBox = boxes.find((b) => b.id === selectedBoxId);
 
   return (
-    <div className="flex-1 flex flex-col bg-background">
+    <div className="w-full h-full flex flex-col bg-background">
       <div className="p-3 border-b bg-card flex items-center gap-2 flex-wrap">
         <div className="flex items-center gap-2">
           <Button 
@@ -446,7 +446,7 @@ export const EnhancedDetectionCanvas = ({
           </div>
         )}
       </div>
-      <div ref={containerRef} className="flex-1 overflow-hidden relative bg-muted/20">
+      <div ref={containerRef} className="flex-1 relative bg-muted/20 flex items-center justify-center">
         <canvas
           ref={canvasRef}
           onMouseDown={handleMouseDown}
@@ -454,12 +454,14 @@ export const EnhancedDetectionCanvas = ({
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
           onWheel={handleWheel}
-          className="w-full h-full"
           style={{ 
             cursor: isPanning ? "grabbing" : 
                     resizeHandle ? "nwse-resize" : 
                     mode === "move" ? "move" : 
-                    "crosshair" 
+                    "crosshair",
+            maxWidth: "100%",
+            maxHeight: "100%",
+            display: "block"
           }}
         />
       </div>
