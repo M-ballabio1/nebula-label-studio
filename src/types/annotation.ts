@@ -1,4 +1,4 @@
-export type AnnotationMode = "detection" | "classification" | "segmentation" | "audio" | "text";
+export type AnnotationMode = "detection" | "classification" | "segmentation" | "video" | "audio" | "text";
 
 export interface Label {
   id: string;

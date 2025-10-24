@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { LabelSidebar } from "@/components/LabelSidebar";
+import { LabelSidebarUnified } from "@/components/LabelSidebarUnified";
 import { AnnotationToolbar } from "@/components/AnnotationToolbar";
 import { ThumbnailGallery } from "@/components/ThumbnailGallery";
 import { EnhancedDetectionCanvas } from "@/components/EnhancedDetectionCanvas";
 import { ClassificationPanel } from "@/components/ClassificationPanel";
 import { EnhancedSegmentationCanvas } from "@/components/EnhancedSegmentationCanvas";
+import { VideoAnnotationCanvas } from "@/components/VideoAnnotationCanvas";
 import { AudioAnnotationCanvas } from "@/components/AudioAnnotationCanvas";
 import { TextAnnotationCanvas } from "@/components/TextAnnotationCanvas";
 import { ImageNavigationBar } from "@/components/ImageNavigationBar";
@@ -23,6 +25,7 @@ import {
   AudioSegment,
   TextAnnotation,
 } from "@/types/annotation";
+import { VideoFrame } from "@/types/video";
 import { toast } from "sonner";
 
 // Sample data
@@ -72,6 +75,7 @@ const SAMPLE_IMAGES: ImageItem[] = [
 ];
 
 const SAMPLE_AUDIO_URL = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
+const SAMPLE_VIDEO_URL = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
 const SAMPLE_TEXT = "Natural Language Processing (NLP) is a subfield of artificial intelligence that focuses on the interaction between computers and humans through natural language. The ultimate objective of NLP is to read, decipher, understand, and make sense of human languages in a manner that is valuable. Most NLP techniques rely on machine learning to derive meaning from human languages. NLP is used to apply algorithms to identify and extract the natural language rules such that unstructured language data is converted into a form that computers can understand.";
 
 type GridMode = "single" | "grid2" | "grid4" | "grid8";
@@ -97,6 +101,8 @@ const Index = () => {
     labelIds: [],
   });
   const [gridMode, setGridMode] = useState<GridMode>("single");
+  const [videoFrames, setVideoFrames] = useState<VideoFrame[]>([]);
+  const [selectedFrameId, setSelectedFrameId] = useState<string | null>(null);
 
   const selectedImage = images.find((img) => img.id === selectedImageId);
 
@@ -322,6 +328,24 @@ const Index = () => {
     toast.success("Text annotation deleted");
   };
 
+  const handleExtractVideoFrames = () => {
+    // Simulated frame extraction - in a real app, this would use canvas to extract frames from video
+    const mockFrames: VideoFrame[] = Array.from({ length: 24 }, (_, i) => ({
+      id: `frame-${i}`,
+      frameNumber: i + 1,
+      timestamp: i * 0.5,
+      imageUrl: images[i % images.length]?.url || images[0]?.url,
+      thumbnailUrl: images[i % images.length]?.thumbnailUrl || images[0]?.thumbnailUrl,
+    }));
+    setVideoFrames(mockFrames);
+    toast.success(`Extracted ${mockFrames.length} frames`);
+  };
+
+  const handleFrameSelect = (frameId: string) => {
+    setSelectedFrameId(frameId);
+    toast.success(`Frame selected`);
+  };
+
   const getGridClass = () => {
     switch (gridMode) {
       case "grid2":
@@ -343,44 +367,68 @@ const Index = () => {
       <Header />
       <div className="flex-1 flex overflow-hidden">
         <div className="w-80 border-r bg-card flex flex-col overflow-hidden">
-          <LabelSidebar
-            labels={labels}
-            selectedLabelId={selectedLabelId}
-            onSelectLabel={setSelectedLabelId}
-            onAddLabel={handleAddLabel}
-            onDeleteLabel={handleDeleteLabel}
-            imageDimensions={mode === "detection" ? imageDimensions : undefined}
-            normalizedDimensions={mode === "detection" ? normalizedDimensions : undefined}
-            boxes={mode === "detection" && selectedImage ? selectedImage.annotations.boxes : undefined}
-            selectedBox={mode === "detection" ? selectedBox : undefined}
-            hoveredBox={mode === "detection" ? hoveredBox : undefined}
-          />
-          {mode === "detection" && selectedImage && (
-            <BoxRecapPanel
-              boxes={selectedImage.annotations.boxes || []}
+          {mode === "classification" ? (
+            <LabelSidebarUnified
               labels={labels}
-              selectedBoxId={selectedBox?.id || null}
-              onSelectBox={(id) => {
-                const box = selectedImage.annotations.boxes?.find((b) => b.id === id);
-                if (box) setSelectedBox(box);
-              }}
-              onDeleteBox={handleDeleteBox}
-            />
-          )}
-          {mode === "segmentation" && selectedImage && (
-            <PolygonRecapPanel
-              polygons={selectedImage.annotations.polygons || []}
-              labels={labels}
-              imageDimensions={segmentationImageDimensions || undefined}
-              onDeletePolygon={handleDeletePolygon}
-            />
-          )}
-          {mode === "classification" && selectedImage && (
-            <TagRecapPanel
-              tags={selectedImage.annotations.tags || []}
-              labels={labels}
-              onRemoveTag={handleToggleTag}
-            />
+              selectedLabelId={selectedLabelId}
+              onSelectLabel={setSelectedLabelId}
+              onAddLabel={handleAddLabel}
+              onDeleteLabel={handleDeleteLabel}
+              isClassificationMode={true}
+              tags={selectedImage?.annotations.tags || []}
+              onToggleTag={handleToggleTag}
+            >
+              <div className="border-t p-4">
+                <h4 className="text-sm font-semibold mb-2">Image Info</h4>
+                <div className="text-xs text-muted-foreground space-y-1">
+                  <div>
+                    Original: {imageDimensions.width}x{imageDimensions.height}px
+                  </div>
+                </div>
+              </div>
+              {selectedImage && (
+                <TagRecapPanel
+                  tags={selectedImage.annotations.tags || []}
+                  labels={labels}
+                  onRemoveTag={handleToggleTag}
+                />
+              )}
+            </LabelSidebarUnified>
+          ) : (
+            <>
+              <LabelSidebar
+                labels={labels}
+                selectedLabelId={selectedLabelId}
+                onSelectLabel={setSelectedLabelId}
+                onAddLabel={handleAddLabel}
+                onDeleteLabel={handleDeleteLabel}
+                imageDimensions={mode === "detection" ? imageDimensions : mode === "segmentation" ? segmentationImageDimensions?.original : undefined}
+                normalizedDimensions={mode === "detection" ? normalizedDimensions : mode === "segmentation" ? segmentationImageDimensions?.normalized : undefined}
+                boxes={mode === "detection" && selectedImage ? selectedImage.annotations.boxes : undefined}
+                selectedBox={mode === "detection" ? selectedBox : undefined}
+                hoveredBox={mode === "detection" ? hoveredBox : undefined}
+              />
+              {mode === "detection" && selectedImage && (
+                <BoxRecapPanel
+                  boxes={selectedImage.annotations.boxes || []}
+                  labels={labels}
+                  selectedBoxId={selectedBox?.id || null}
+                  onSelectBox={(id) => {
+                    const box = selectedImage.annotations.boxes?.find((b) => b.id === id);
+                    if (box) setSelectedBox(box);
+                  }}
+                  onDeleteBox={handleDeleteBox}
+                />
+              )}
+              {mode === "segmentation" && selectedImage && (
+                <PolygonRecapPanel
+                  polygons={selectedImage.annotations.polygons || []}
+                  labels={labels}
+                  imageDimensions={segmentationImageDimensions || undefined}
+                  onDeletePolygon={handleDeletePolygon}
+                />
+              )}
+            </>
           )}
         </div>
 
@@ -439,6 +487,10 @@ const Index = () => {
                     tags={selectedImage.annotations.tags || []}
                     labels={labels}
                     onToggleTag={handleToggleTag}
+                    onImageDimensions={(dims) => {
+                      setImageDimensions(dims.original);
+                      setNormalizedDimensions(dims.normalized);
+                    }}
                   />
                 )}
                 {selectedImage && mode === "segmentation" && (
@@ -450,6 +502,15 @@ const Index = () => {
                     onAddPolygon={handleAddPolygon}
                     onDeletePolygon={handleDeletePolygon}
                     onImageDimensions={setSegmentationImageDimensions}
+                  />
+                )}
+                {mode === "video" && (
+                  <VideoAnnotationCanvas
+                    videoUrl={SAMPLE_VIDEO_URL}
+                    frames={videoFrames}
+                    currentFrameId={selectedFrameId}
+                    onFrameSelect={handleFrameSelect}
+                    onExtractFrames={handleExtractVideoFrames}
                   />
                 )}
                 {mode === "audio" && (

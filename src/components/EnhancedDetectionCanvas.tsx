@@ -116,8 +116,17 @@ export const EnhancedDetectionCanvas = ({
     ctx.translate(pan.x, pan.y);
     ctx.scale(zoom, zoom);
 
+    // Calculate image dimensions to fit canvas while maintaining aspect ratio
+    const maxWidth = canvas.width / zoom * 0.9;
+    const maxHeight = canvas.height / zoom * 0.9;
+    const scale = Math.min(maxWidth / img.width, maxHeight / img.height);
+    const scaledWidth = img.width * scale;
+    const scaledHeight = img.height * scale;
+    const offsetX = (canvas.width / zoom - scaledWidth) / 2;
+    const offsetY = (canvas.height / zoom - scaledHeight) / 2;
+
     // Draw image
-    ctx.drawImage(img, 0, 0, canvas.width / zoom, canvas.height / zoom);
+    ctx.drawImage(img, offsetX, offsetY, scaledWidth, scaledHeight);
 
     // Draw existing boxes - they scale with zoom automatically due to ctx.scale()
     boxes.forEach((box) => {
