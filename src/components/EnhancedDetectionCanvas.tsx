@@ -36,6 +36,7 @@ export const EnhancedDetectionCanvas = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
   const imageBoundsRef = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
+  const originalImageDimensionsRef = useRef<{ width: number; height: number } | null>(null);
   
   const [isDrawing, setIsDrawing] = useState(false);
   const [startPoint, setStartPoint] = useState<{ x: number; y: number } | null>(null);
@@ -55,6 +56,7 @@ export const EnhancedDetectionCanvas = ({
     img.src = imageUrl;
     img.onload = () => {
       imageRef.current = img;
+      originalImageDimensionsRef.current = { width: img.width, height: img.height };
       if (onImageLoad) {
         onImageLoad({ width: img.width, height: img.height });
       }
@@ -137,30 +139,36 @@ export const EnhancedDetectionCanvas = ({
     // Draw image
     ctx.drawImage(img, offsetX, offsetY, scaledWidth, scaledHeight);
 
-    // Draw existing boxes - they scale with zoom automatically due to ctx.scale()
+    // Draw existing boxes - denormalize coordinates for display
     boxes.forEach((box) => {
       const label = labels.find((l) => l.id === box.labelId);
       if (!label) return;
+
+      // Denormalize box coordinates from (0-1) to current display dimensions
+      const displayX = offsetX + box.x * scaledWidth;
+      const displayY = offsetY + box.y * scaledHeight;
+      const displayWidth = box.width * scaledWidth;
+      const displayHeight = box.height * scaledHeight;
 
       const isSelected = box.id === selectedBoxId;
       const isHovered = box.id === hoveredBoxId;
 
       ctx.strokeStyle = isSelected ? "#fff" : isHovered ? label.color : label.color;
       ctx.lineWidth = (isSelected ? 3 : isHovered ? 2.5 : 2) / zoom;
-      ctx.strokeRect(box.x, box.y, box.width, box.height);
+      ctx.strokeRect(displayX, displayY, displayWidth, displayHeight);
 
       // Draw resize handles for selected box
       if (isSelected) {
         const handleSize = 8 / zoom;
         const handles = [
-          { x: box.x, y: box.y },
-          { x: box.x + box.width, y: box.y },
-          { x: box.x, y: box.y + box.height },
-          { x: box.x + box.width, y: box.y + box.height },
-          { x: box.x + box.width / 2, y: box.y },
-          { x: box.x + box.width / 2, y: box.y + box.height },
-          { x: box.x, y: box.y + box.height / 2 },
-          { x: box.x + box.width, y: box.y + box.height / 2 },
+          { x: displayX, y: displayY },
+          { x: displayX + displayWidth, y: displayY },
+          { x: displayX, y: displayY + displayHeight },
+          { x: displayX + displayWidth, y: displayY + displayHeight },
+          { x: displayX + displayWidth / 2, y: displayY },
+          { x: displayX + displayWidth / 2, y: displayY + displayHeight },
+          { x: displayX, y: displayY + displayHeight / 2 },
+          { x: displayX + displayWidth, y: displayY + displayHeight / 2 },
         ];
         ctx.fillStyle = "#fff";
         handles.forEach((handle) => {
@@ -176,14 +184,14 @@ export const EnhancedDetectionCanvas = ({
       const textWidth = ctx.measureText(labelText).width;
       const labelHeight = 20 / zoom;
       const padding = 4 / zoom;
-      ctx.fillRect(box.x, box.y - labelHeight, textWidth + padding * 2, labelHeight);
+      ctx.fillRect(displayX, displayY - labelHeight, textWidth + padding * 2, labelHeight);
 
       // Draw label text
       ctx.fillStyle = "#fff";
-      ctx.fillText(labelText, box.x + padding, box.y - padding);
+      ctx.fillText(labelText, displayX + padding, displayY - padding);
     });
 
-    // Draw current box being drawn
+    // Draw current box being drawn (in display coordinates)
     if (currentBox && selectedLabelId) {
       const label = labels.find((l) => l.id === selectedLabelId);
       if (label) {
@@ -217,16 +225,25 @@ export const EnhancedDetectionCanvas = ({
   };
 
   const getResizeHandle = (box: BoundingBox, point: { x: number; y: number }): ResizeHandle => {
+    const imageBounds = imageBoundsRef.current;
+    if (!imageBounds) return null;
+
+    // Denormalize box coordinates
+    const displayX = imageBounds.x + box.x * imageBounds.width;
+    const displayY = imageBounds.y + box.y * imageBounds.height;
+    const displayWidth = box.width * imageBounds.width;
+    const displayHeight = box.height * imageBounds.height;
+    
     const threshold = 8 / zoom;
     
-    if (Math.abs(point.x - box.x) < threshold && Math.abs(point.y - box.y) < threshold) return "nw";
-    if (Math.abs(point.x - (box.x + box.width)) < threshold && Math.abs(point.y - box.y) < threshold) return "ne";
-    if (Math.abs(point.x - box.x) < threshold && Math.abs(point.y - (box.y + box.height)) < threshold) return "sw";
-    if (Math.abs(point.x - (box.x + box.width)) < threshold && Math.abs(point.y - (box.y + box.height)) < threshold) return "se";
-    if (Math.abs(point.x - (box.x + box.width / 2)) < threshold && Math.abs(point.y - box.y) < threshold) return "n";
-    if (Math.abs(point.x - (box.x + box.width / 2)) < threshold && Math.abs(point.y - (box.y + box.height)) < threshold) return "s";
-    if (Math.abs(point.x - box.x) < threshold && Math.abs(point.y - (box.y + box.height / 2)) < threshold) return "w";
-    if (Math.abs(point.x - (box.x + box.width)) < threshold && Math.abs(point.y - (box.y + box.height / 2)) < threshold) return "e";
+    if (Math.abs(point.x - displayX) < threshold && Math.abs(point.y - displayY) < threshold) return "nw";
+    if (Math.abs(point.x - (displayX + displayWidth)) < threshold && Math.abs(point.y - displayY) < threshold) return "ne";
+    if (Math.abs(point.x - displayX) < threshold && Math.abs(point.y - (displayY + displayHeight)) < threshold) return "sw";
+    if (Math.abs(point.x - (displayX + displayWidth)) < threshold && Math.abs(point.y - (displayY + displayHeight)) < threshold) return "se";
+    if (Math.abs(point.x - (displayX + displayWidth / 2)) < threshold && Math.abs(point.y - displayY) < threshold) return "n";
+    if (Math.abs(point.x - (displayX + displayWidth / 2)) < threshold && Math.abs(point.y - (displayY + displayHeight)) < threshold) return "s";
+    if (Math.abs(point.x - displayX) < threshold && Math.abs(point.y - (displayY + displayHeight / 2)) < threshold) return "w";
+    if (Math.abs(point.x - (displayX + displayWidth)) < threshold && Math.abs(point.y - (displayY + displayHeight / 2)) < threshold) return "e";
     
     return null;
   };
@@ -255,14 +272,19 @@ export const EnhancedDetectionCanvas = ({
       }
     }
 
-    // Check if clicking on a box
-    const clickedBox = boxes.find(
-      (box) =>
-        coords.x >= box.x &&
-        coords.x <= box.x + box.width &&
-        coords.y >= box.y &&
-        coords.y <= box.y + box.height
-    );
+    // Check if clicking on a box (denormalize for hit detection)
+    const imageBounds = imageBoundsRef.current;
+    const clickedBox = imageBounds ? boxes.find((box) => {
+      const displayX = imageBounds.x + box.x * imageBounds.width;
+      const displayY = imageBounds.y + box.y * imageBounds.height;
+      const displayWidth = box.width * imageBounds.width;
+      const displayHeight = box.height * imageBounds.height;
+      
+      return coords.x >= displayX &&
+        coords.x <= displayX + displayWidth &&
+        coords.y >= displayY &&
+        coords.y <= displayY + displayHeight;
+    }) : null;
 
     if (clickedBox) {
       setSelectedBoxId(clickedBox.id);
@@ -297,29 +319,49 @@ export const EnhancedDetectionCanvas = ({
       const imageBounds = imageBoundsRef.current;
       if (!box || !imageBounds) return;
 
+      // Denormalize current box for calculation
+      const displayX = imageBounds.x + box.x * imageBounds.width;
+      const displayY = imageBounds.y + box.y * imageBounds.height;
+      const displayWidth = box.width * imageBounds.width;
+      const displayHeight = box.height * imageBounds.height;
+
       const dx = coords.x - startPoint.x;
       const dy = coords.y - startPoint.y;
 
-      let newBox = { ...box };
+      let newDisplayX = displayX;
+      let newDisplayY = displayY;
+      let newDisplayWidth = displayWidth;
+      let newDisplayHeight = displayHeight;
 
       if (resizeHandle.includes("n")) {
-        newBox.y = Math.max(imageBounds.y, box.y + dy);
-        newBox.height = box.height - (newBox.y - box.y);
+        newDisplayY = Math.max(imageBounds.y, displayY + dy);
+        newDisplayHeight = displayHeight - (newDisplayY - displayY);
       }
       if (resizeHandle.includes("s")) {
-        newBox.height = Math.min(imageBounds.y + imageBounds.height - box.y, box.height + dy);
+        newDisplayHeight = Math.min(imageBounds.y + imageBounds.height - displayY, displayHeight + dy);
       }
       if (resizeHandle.includes("w")) {
-        newBox.x = Math.max(imageBounds.x, box.x + dx);
-        newBox.width = box.width - (newBox.x - box.x);
+        newDisplayX = Math.max(imageBounds.x, displayX + dx);
+        newDisplayWidth = displayWidth - (newDisplayX - displayX);
       }
       if (resizeHandle.includes("e")) {
-        newBox.width = Math.min(imageBounds.x + imageBounds.width - box.x, box.width + dx);
+        newDisplayWidth = Math.min(imageBounds.x + imageBounds.width - displayX, displayWidth + dx);
       }
 
+      // Normalize back to (0-1) coordinates
+      const normalizedX = (newDisplayX - imageBounds.x) / imageBounds.width;
+      const normalizedY = (newDisplayY - imageBounds.y) / imageBounds.height;
+      const normalizedWidth = newDisplayWidth / imageBounds.width;
+      const normalizedHeight = newDisplayHeight / imageBounds.height;
+
       // Ensure minimum size
-      if (newBox.width > 5 && newBox.height > 5) {
-        onUpdateBox(selectedBoxId, newBox);
+      if (newDisplayWidth > 5 && newDisplayHeight > 5) {
+        onUpdateBox(selectedBoxId, {
+          x: normalizedX,
+          y: normalizedY,
+          width: normalizedWidth,
+          height: normalizedHeight,
+        });
       }
       setStartPoint(coords);
       return;
@@ -331,15 +373,25 @@ export const EnhancedDetectionCanvas = ({
       const imageBounds = imageBoundsRef.current;
       if (!box || !imageBounds) return;
 
+      // Denormalize for calculation
+      const displayX = imageBounds.x + box.x * imageBounds.width;
+      const displayY = imageBounds.y + box.y * imageBounds.height;
+      const displayWidth = box.width * imageBounds.width;
+      const displayHeight = box.height * imageBounds.height;
+
       const dx = coords.x - startPoint.x;
       const dy = coords.y - startPoint.y;
 
-      const newX = Math.max(imageBounds.x, Math.min(imageBounds.x + imageBounds.width - box.width, box.x + dx));
-      const newY = Math.max(imageBounds.y, Math.min(imageBounds.y + imageBounds.height - box.height, box.y + dy));
+      const newDisplayX = Math.max(imageBounds.x, Math.min(imageBounds.x + imageBounds.width - displayWidth, displayX + dx));
+      const newDisplayY = Math.max(imageBounds.y, Math.min(imageBounds.y + imageBounds.height - displayHeight, displayY + dy));
+
+      // Normalize back
+      const normalizedX = (newDisplayX - imageBounds.x) / imageBounds.width;
+      const normalizedY = (newDisplayY - imageBounds.y) / imageBounds.height;
 
       onUpdateBox(selectedBoxId, {
-        x: newX,
-        y: newY,
+        x: normalizedX,
+        y: normalizedY,
       });
       setStartPoint(coords);
       return;
@@ -356,14 +408,19 @@ export const EnhancedDetectionCanvas = ({
       return;
     }
 
-    // Check for hover
-    const hoveredBox = boxes.find(
-      (box) =>
-        coords.x >= box.x &&
-        coords.x <= box.x + box.width &&
-        coords.y >= box.y &&
-        coords.y <= box.y + box.height
-    );
+    // Check for hover (denormalize for hit detection)
+    const imageBounds = imageBoundsRef.current;
+    const hoveredBox = imageBounds ? boxes.find((box) => {
+      const displayX = imageBounds.x + box.x * imageBounds.width;
+      const displayY = imageBounds.y + box.y * imageBounds.height;
+      const displayWidth = box.width * imageBounds.width;
+      const displayHeight = box.height * imageBounds.height;
+      
+      return coords.x >= displayX &&
+        coords.x <= displayX + displayWidth &&
+        coords.y >= displayY &&
+        coords.y <= displayY + displayHeight;
+    }) : null;
     setHoveredBoxId(hoveredBox?.id || null);
     if (onBoxHover) onBoxHover(hoveredBox || null);
   };
@@ -398,16 +455,16 @@ export const EnhancedDetectionCanvas = ({
         };
         
         if (clampedBox.width > 5 && clampedBox.height > 5) {
-          onAddBox({
-            ...clampedBox,
+          // Normalize coordinates to (0-1) before saving
+          const normalizedBox = {
+            x: (clampedBox.x - imageBounds.x) / imageBounds.width,
+            y: (clampedBox.y - imageBounds.y) / imageBounds.height,
+            width: clampedBox.width / imageBounds.width,
+            height: clampedBox.height / imageBounds.height,
             labelId: selectedLabelId,
-          });
+          };
+          onAddBox(normalizedBox);
         }
-      } else {
-        onAddBox({
-          ...currentBox,
-          labelId: selectedLabelId,
-        });
       }
     }
     setIsDrawing(false);

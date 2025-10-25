@@ -9,16 +9,16 @@ export interface Label {
 
 export interface BoundingBox {
   id: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
+  x: number; // Normalized coordinate (0-1) relative to original image width
+  y: number; // Normalized coordinate (0-1) relative to original image height
+  width: number; // Normalized width (0-1) relative to original image width
+  height: number; // Normalized height (0-1) relative to original image height
   labelId: string;
 }
 
 export interface SegmentationPoint {
-  x: number;
-  y: number;
+  x: number; // Normalized coordinate (0-1) relative to original image width
+  y: number; // Normalized coordinate (0-1) relative to original image height
 }
 
 export interface SegmentationPolygon {

@@ -34,6 +34,7 @@ export const EnhancedSegmentationCanvas = ({
   const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const imageBoundsRef = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
+  const originalImageDimensionsRef = useRef<{ width: number; height: number } | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -62,6 +63,9 @@ export const EnhancedSegmentationCanvas = ({
     const img = new Image();
     img.src = imageUrl;
     img.onload = () => {
+      // Store original dimensions
+      originalImageDimensionsRef.current = { width: img.width, height: img.height };
+      
       // Calculate scale to fit image in viewport similar to detection canvas
       const baseMaxWidth = canvas.width * 0.95;
       const baseMaxHeight = canvas.height * 0.95;
@@ -94,15 +98,24 @@ export const EnhancedSegmentationCanvas = ({
       ctx.translate(pan.x, pan.y);
       ctx.scale(zoom, zoom);
 
-      // Draw existing polygons
+      // Draw existing polygons - denormalize coordinates for display
       polygons.forEach((polygon) => {
         const label = labels.find((l) => l.id === polygon.labelId);
         if (!label || polygon.points.length < 2) return;
 
         ctx.beginPath();
-        ctx.moveTo(polygon.points[0].x, polygon.points[0].y);
+        // Denormalize first point
+        const firstX = offsetX + polygon.points[0].x * scaledWidth;
+        const firstY = offsetY + polygon.points[0].y * scaledHeight;
+        ctx.moveTo(firstX, firstY);
+        
         polygon.points.forEach((point, i) => {
-          if (i > 0) ctx.lineTo(point.x, point.y);
+          if (i > 0) {
+            // Denormalize each point
+            const displayX = offsetX + point.x * scaledWidth;
+            const displayY = offsetY + point.y * scaledHeight;
+            ctx.lineTo(displayX, displayY);
+          }
         });
         ctx.closePath();
 
@@ -118,8 +131,10 @@ export const EnhancedSegmentationCanvas = ({
         // Draw points
         const pointSize = 4 / zoom;
         polygon.points.forEach((point) => {
+          const displayX = offsetX + point.x * scaledWidth;
+          const displayY = offsetY + point.y * scaledHeight;
           ctx.beginPath();
-          ctx.arc(point.x, point.y, pointSize, 0, 2 * Math.PI);
+          ctx.arc(displayX, displayY, pointSize, 0, 2 * Math.PI);
           ctx.fillStyle = label.color;
           ctx.fill();
           ctx.strokeStyle = "#fff";
@@ -244,11 +259,21 @@ export const EnhancedSegmentationCanvas = ({
 
   const handleComplete = () => {
     if (currentPoints.length >= 3 && selectedLabelId) {
-      onAddPolygon({
-        points: currentPoints,
-        labelId: selectedLabelId,
-      });
+      const imageBounds = imageBoundsRef.current;
+      if (imageBounds) {
+        // Normalize all points before saving (currentPoints are in display coordinates)
+        const normalizedPoints = currentPoints.map(p => ({
+          x: (p.x - imageBounds.x) / imageBounds.width,
+          y: (p.y - imageBounds.y) / imageBounds.height,
+        }));
+        
+        onAddPolygon({
+          points: normalizedPoints,
+          labelId: selectedLabelId,
+        });
+      }
       setCurrentPoints([]);
+      setMousePos(null);
     }
   };
 
