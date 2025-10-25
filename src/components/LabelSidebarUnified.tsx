@@ -70,7 +70,7 @@ export const LabelSidebarUnified = ({
           </h3>
           <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-              <Button size="sm" className="h-8 bg-primary text-primary-foreground">
+              <Button size="sm" className="h-8 gradient-action text-accent-action-foreground glow-action hover:opacity-90">
                 <Plus className="w-4 h-4" />
               </Button>
             </DialogTrigger>
@@ -112,7 +112,7 @@ export const LabelSidebarUnified = ({
                     maxLength={1}
                   />
                 </div>
-                <Button onClick={handleAddLabel} className="w-full bg-primary text-primary-foreground">
+                <Button onClick={handleAddLabel} className="w-full gradient-action text-accent-action-foreground glow-action hover:opacity-90">
                   Add Label
                 </Button>
               </div>
