@@ -135,7 +135,7 @@ export const LabelSidebarUnified = ({
               <div
                 key={label.id}
                 className={`group p-3 rounded-lg cursor-pointer transition-all hover:bg-accent ${
-                  isSelected || (isClassificationMode && isTagged) ? "bg-primary text-primary-foreground" : ""
+                  isSelected || (isClassificationMode && isTagged) ? "bg-accent ring-2 ring-primary" : ""
                 }`}
                 onClick={() => {
                   if (isClassificationMode && onToggleTag) {

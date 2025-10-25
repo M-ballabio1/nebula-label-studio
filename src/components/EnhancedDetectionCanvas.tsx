@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { BoundingBox, Label } from "@/types/annotation";
-import { Trash2, ZoomIn, ZoomOut, Copy, RotateCcw, Edit2 } from "lucide-react";
+import { Trash2, ZoomIn, ZoomOut, Copy, RotateCcw, Edit2, Info, Box } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 
 interface EnhancedDetectionCanvasProps {
@@ -515,7 +517,50 @@ export const EnhancedDetectionCanvas = ({
   const selectedBox = boxes.find((b) => b.id === selectedBoxId);
 
   return (
-    <div className="w-full h-full flex flex-col bg-background">
+    <div className="w-full h-full flex flex-col bg-background relative">
+      {/* Workflow Instructions */}
+      <Card className="absolute top-4 right-4 z-10 p-4 w-80 bg-card/95 backdrop-blur-sm shadow-lg">
+        <div className="flex items-start gap-3">
+          <div className="p-2 rounded-lg bg-primary/10">
+            <Info className="w-4 h-4 text-primary" />
+          </div>
+          <div className="flex-1 space-y-2">
+            <h4 className="font-semibold text-sm flex items-center gap-2">
+              <Box className="w-4 h-4" />
+              Detection Workflow
+            </h4>
+            <ol className="text-xs text-muted-foreground space-y-1.5 list-decimal list-inside">
+              <li>Select a label from the sidebar</li>
+              <li>Click and drag on the image to draw a bounding box</li>
+              <li>Click on existing boxes to select and edit them</li>
+              <li>Use resize handles to adjust box dimensions</li>
+              <li>Press <kbd className="px-1 py-0.5 bg-muted rounded text-[10px]">Delete</kbd> to remove selected box</li>
+            </ol>
+            <div className="pt-2 border-t">
+              <p className="text-xs font-medium mb-1">Keyboard Shortcuts:</p>
+              <div className="flex flex-wrap gap-1 text-[10px]">
+                <Badge variant="secondary" className="font-mono">Shift+Drag</Badge>
+                <span className="text-muted-foreground">Pan</span>
+                <Badge variant="secondary" className="font-mono">Ctrl+C/V</Badge>
+                <span className="text-muted-foreground">Copy/Paste</span>
+                <Badge variant="secondary" className="font-mono">1-9</Badge>
+                <span className="text-muted-foreground">Quick label</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      {/* Status Bar */}
+      {selectedLabelId && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10">
+          <Badge className="bg-primary text-primary-foreground px-4 py-2 shadow-lg">
+            <Box className="w-3 h-3 mr-2" />
+            Drawing: {labels.find(l => l.id === selectedLabelId)?.name}
+          </Badge>
+        </div>
+      )}
+
       <div className="p-3 border-b bg-card flex items-center gap-2 flex-wrap">
         <div className="flex items-center gap-2">
           <Button 

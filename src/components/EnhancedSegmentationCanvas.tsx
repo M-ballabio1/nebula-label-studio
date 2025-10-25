@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { SegmentationPolygon, SegmentationPoint, Label } from "@/types/annotation";
-import { ZoomIn, ZoomOut, Trash2, CheckCircle, X } from "lucide-react";
+import { ZoomIn, ZoomOut, Trash2, CheckCircle, X, Info, Pentagon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 
 interface EnhancedSegmentationCanvasProps {
@@ -332,6 +334,46 @@ export const EnhancedSegmentationCanvas = ({
 
   return (
     <div className="w-full h-full flex flex-col bg-background relative">
+      {/* Workflow Instructions */}
+      <Card className="absolute top-4 right-4 z-10 p-4 w-80 bg-card/95 backdrop-blur-sm shadow-lg">
+        <div className="flex items-start gap-3">
+          <div className="p-2 rounded-lg bg-primary/10">
+            <Info className="w-4 h-4 text-primary" />
+          </div>
+          <div className="flex-1 space-y-2">
+            <h4 className="font-semibold text-sm flex items-center gap-2">
+              <Pentagon className="w-4 h-4" />
+              Segmentation Workflow
+            </h4>
+            <ol className="text-xs text-muted-foreground space-y-1.5 list-decimal list-inside">
+              <li>Select a label from the sidebar</li>
+              <li>Click and drag to draw freehand polygons around objects</li>
+              <li>Continue drawing to add more points for precision</li>
+              <li>Click <Badge variant="outline" className="text-[9px] px-1 py-0 h-4">Complete</Badge> when done drawing</li>
+              <li>Hover over polygons and click <Badge variant="outline" className="text-[9px] px-1 py-0 h-4">Delete</Badge> to remove</li>
+            </ol>
+            <div className="pt-2 border-t">
+              <p className="text-xs font-medium mb-1">Drawing Tips:</p>
+              <div className="text-[10px] text-muted-foreground space-y-1">
+                <p>• Draw smoothly for accurate object boundaries</p>
+                <p>• Use zoom to work on detailed areas</p>
+                <p>• Cancel anytime with <kbd className="px-1 py-0.5 bg-muted rounded">X</kbd></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      {/* Status Bar */}
+      {selectedLabelId && currentPoints.length > 0 && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10">
+          <Badge className="bg-primary text-primary-foreground px-4 py-2 shadow-lg animate-fade-in">
+            <Pentagon className="w-3 h-3 mr-2" />
+            Drawing: {labels.find(l => l.id === selectedLabelId)?.name} ({currentPoints.length} points)
+          </Badge>
+        </div>
+      )}
+
       {/* Top toolbar */}
       <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 bg-card/95 backdrop-blur-sm px-4 py-2 rounded-lg shadow-lg border">
         <Button size="sm" variant="outline" onClick={handleZoomOut}>
