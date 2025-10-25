@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { AudioSegment, Label } from "@/types/annotation";
-import { Play, Pause, SkipBack, SkipForward, Trash2 } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Trash2, Info, Music } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 interface AudioAnnotationCanvasProps {
   audioUrl: string;
@@ -173,22 +175,82 @@ export const AudioAnnotationCanvas = ({
     return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   };
 
+  const selectedLabel = labels.find(l => l.id === selectedLabelId);
+
   return (
-    <div className="flex-1 flex flex-col bg-background">
+    <div className="flex-1 flex flex-col bg-background overflow-hidden">
       <audio ref={audioRef} src={audioUrl} />
       
-      <div className="p-4 border-b bg-card">
-        <div className="flex items-center gap-4 mb-4">
-          <Button size="sm" variant="outline" onClick={skipBackward}>
+      {/* Instructions Panel */}
+      <Card className="m-4 p-4 bg-primary/5 border-primary/20">
+        <div className="flex items-start gap-3">
+          <Info className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+          <div className="flex-1 space-y-2">
+            <h4 className="font-semibold text-sm">How to Label Audio Segments</h4>
+            <ol className="text-sm text-muted-foreground space-y-1.5">
+              <li className="flex items-start gap-2">
+                <span className="font-semibold text-primary">1.</span>
+                <span>Select a label from the sidebar on the left</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="font-semibold text-primary">2.</span>
+                <span>Click on the waveform to mark the start of your segment</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="font-semibold text-primary">3.</span>
+                <span>Click again to mark the end (minimum 0.1 seconds duration)</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="font-semibold text-primary">4.</span>
+                <span>Hover over segments and click <Trash2 className="w-3 h-3 inline mx-1" /> to delete</span>
+              </li>
+            </ol>
+            <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2 border-t">
+              <span>⌨️ Keyboard: Space = Play/Pause</span>
+              <span>← = Skip -5s</span>
+              <span>→ = Skip +5s</span>
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      {/* Status Bar */}
+      <div className="px-4 pb-3">
+        <div className="flex items-center gap-3">
+          <Music className="w-4 h-4 text-primary" />
+          <span className="text-sm font-medium">
+            {selectedLabel ? (
+              <span className="flex items-center gap-2">
+                Labeling as:
+                <Badge style={{ backgroundColor: selectedLabel.color + "20", color: selectedLabel.color }}>
+                  {selectedLabel.name}
+                </Badge>
+              </span>
+            ) : (
+              <span className="text-muted-foreground">Select a label to start annotating</span>
+            )}
+          </span>
+          {isSelecting && selectionStart !== null && (
+            <Badge variant="outline" className="animate-pulse">
+              Selection started at {formatTime(selectionStart)} - Click to finish
+            </Badge>
+          )}
+        </div>
+      </div>
+
+      {/* Audio Controls */}
+      <div className="px-4 pb-4 border-b bg-card/50">
+        <div className="flex items-center gap-4 mb-3">
+          <Button size="sm" variant="outline" onClick={skipBackward} title="Skip backward 5 seconds (←)">
             <SkipBack className="w-4 h-4" />
           </Button>
-          <Button size="sm" variant="outline" onClick={togglePlayPause}>
+          <Button size="sm" variant="outline" onClick={togglePlayPause} title="Play/Pause (Space)">
             {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
           </Button>
-          <Button size="sm" variant="outline" onClick={skipForward}>
+          <Button size="sm" variant="outline" onClick={skipForward} title="Skip forward 5 seconds (→)">
             <SkipForward className="w-4 h-4" />
           </Button>
-          <div className="flex-1 text-sm text-muted-foreground">
+          <div className="flex-1 text-sm font-mono text-muted-foreground">
             {formatTime(currentTime)} / {formatTime(duration)}
           </div>
           {hoveredSegmentId && (
@@ -196,8 +258,10 @@ export const AudioAnnotationCanvas = ({
               size="sm"
               variant="destructive"
               onClick={() => onDeleteSegment(hoveredSegmentId)}
+              title="Delete segment"
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-4 h-4 mr-1" />
+              Delete
             </Button>
           )}
         </div>
@@ -210,26 +274,52 @@ export const AudioAnnotationCanvas = ({
               audioRef.current.currentTime = value;
             }
           }}
+          className="cursor-pointer"
         />
       </div>
 
-      <div className="flex-1 p-4">
+      {/* Waveform Canvas */}
+      <div className="flex-1 p-4 overflow-auto">
         <canvas
           ref={canvasRef}
           width={1200}
           height={200}
-          className="w-full h-full cursor-pointer border rounded-lg"
+          className={`w-full h-full border-2 rounded-lg transition-colors ${
+            selectedLabelId 
+              ? isSelecting 
+                ? "cursor-crosshair border-primary" 
+                : "cursor-pointer border-primary/50" 
+              : "cursor-pointer border-border"
+          }`}
           onClick={handleCanvasClick}
           onMouseMove={handleCanvasHover}
         />
-        <div className="mt-4 text-sm text-muted-foreground text-center">
-          {selectedLabelId
-            ? isSelecting
-              ? "Click again to finish selection"
-              : "Click to start segment selection"
-            : "Select a label to annotate, or click to seek"}
-        </div>
+      </div>
+
+      {/* Stats Footer */}
+      <div className="px-4 py-2 border-t bg-muted/30 text-xs text-muted-foreground flex items-center justify-between">
+        <span>{segments.length} segment{segments.length !== 1 ? "s" : ""} created</span>
+        <span>Total duration: {formatTime(duration)}</span>
       </div>
     </div>
   );
+
+  // Add keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        togglePlayPause();
+      } else if (e.code === 'ArrowLeft') {
+        e.preventDefault();
+        skipBackward();
+      } else if (e.code === 'ArrowRight') {
+        e.preventDefault();
+        skipForward();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isPlaying, currentTime, duration]);
 };
