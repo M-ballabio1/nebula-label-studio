@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   AnnotationMode,
   BoundingBox,
@@ -29,17 +29,17 @@ export const useAnnotationState = () => {
   const { labels, setLabels, loading: labelsLoading } = useLabels();
 
   // Set initial selected label and image when data loads
-  useState(() => {
+  useEffect(() => {
     if (labels.length > 0 && !selectedLabelId) {
       setSelectedLabelId(labels[0].id);
     }
-  });
+  }, [labels, selectedLabelId]);
 
-  useState(() => {
+  useEffect(() => {
     if (images.length > 0 && !selectedImageId) {
       setSelectedImageId(images[0].id);
     }
-  });
+  }, [images, selectedImageId]);
 
   const selectedImage = images.find((img) => img.id === selectedImageId);
 

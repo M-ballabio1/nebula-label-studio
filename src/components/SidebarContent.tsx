@@ -1,7 +1,7 @@
 import { AnnotationMode, Label, ImageItem, BoundingBox } from "@/types/annotation";
 import { LabelSidebar } from "./LabelSidebar";
 import { LabelSidebarUnified } from "./LabelSidebarUnified";
-import { AudioSidebar } from "./AudioSidebar";
+import { AudioSegmentsList } from "./AudioSegmentsList";
 import { BoxRecapPanel } from "./BoxRecapPanel";
 import { PolygonRecapPanel } from "./PolygonRecapPanel";
 import { TagRecapPanel } from "./TagRecapPanel";
@@ -77,6 +77,21 @@ export const SidebarContent = ({
             <TagRecapPanel tags={selectedImage.annotations.tags || []} labels={labels} onRemoveTag={onToggleTag} />
           )}
         </LabelSidebarUnified>
+      ) : mode === "audio" ? (
+        <>
+          <LabelSidebar
+            labels={labels}
+            selectedLabelId={selectedLabelId}
+            onSelectLabel={onSelectLabel}
+            onAddLabel={onAddLabel}
+            onDeleteLabel={onDeleteLabel}
+          />
+          <AudioSegmentsList
+            segments={audioSegments}
+            labels={labels}
+            onDeleteSegment={onDeleteSegment}
+          />
+        </>
       ) : mode === "text" ? (
         <>
           <LabelSidebar

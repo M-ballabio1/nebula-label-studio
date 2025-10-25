@@ -18,12 +18,10 @@ interface AppMenuProps {
   mode: AnnotationMode;
   images: ImageItem[];
   labels: Label[];
+  onOpenSettings: () => void;
 }
 
-export const AppMenu = ({ mode, images, labels }: AppMenuProps) => {
-  const handleSettings = () => {
-    toast.info("Settings panel coming soon");
-  };
+export const AppMenu = ({ mode, images, labels, onOpenSettings }: AppMenuProps) => {
 
   const handleExportCOCO = async (includeImages: boolean = false) => {
     const cocoData = exportCOCO(images, labels);
@@ -148,7 +146,7 @@ export const AppMenu = ({ mode, images, labels }: AppMenuProps) => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuItem onClick={handleSettings}>
+        <DropdownMenuItem onClick={onOpenSettings}>
           <Settings className="w-4 h-4 mr-2" />
           Settings
         </DropdownMenuItem>
