@@ -52,20 +52,6 @@ export const SidebarContent = ({
   onDeleteTextAnnotation,
   onSelectBox,
 }: SidebarContentProps) => {
-  if (mode === "audio") {
-    return (
-      <AudioSidebar
-        labels={labels}
-        selectedLabelId={selectedLabelId}
-        onSelectLabel={onSelectLabel}
-        onAddLabel={onAddLabel}
-        onDeleteLabel={onDeleteLabel}
-        segments={audioSegments}
-        onDeleteSegment={onDeleteSegment}
-      />
-    );
-  }
-
   return (
     <div className="w-80 border-r bg-card flex flex-col overflow-hidden">
       {mode === "classification" ? (
@@ -88,11 +74,7 @@ export const SidebarContent = ({
             </div>
           </div>
           {selectedImage && (
-            <TagRecapPanel
-              tags={selectedImage.annotations.tags || []}
-              labels={labels}
-              onRemoveTag={onToggleTag}
-            />
+            <TagRecapPanel tags={selectedImage.annotations.tags || []} labels={labels} onRemoveTag={onToggleTag} />
           )}
         </LabelSidebarUnified>
       ) : mode === "text" ? (
@@ -122,15 +104,15 @@ export const SidebarContent = ({
               mode === "detection"
                 ? imageDimensions
                 : mode === "segmentation"
-                ? segmentationImageDimensions?.original
-                : undefined
+                  ? segmentationImageDimensions?.original
+                  : undefined
             }
             normalizedDimensions={
               mode === "detection"
                 ? normalizedDimensions
                 : mode === "segmentation"
-                ? segmentationImageDimensions?.normalized
-                : undefined
+                  ? segmentationImageDimensions?.normalized
+                  : undefined
             }
             boxes={mode === "detection" && selectedImage ? selectedImage.annotations.boxes : undefined}
             selectedBox={mode === "detection" ? selectedBox : undefined}
