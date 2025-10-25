@@ -7,7 +7,7 @@ import { ThumbnailGallery } from "@/components/ThumbnailGallery";
 import { EnhancedDetectionCanvas } from "@/components/EnhancedDetectionCanvas";
 import { ClassificationPanel } from "@/components/ClassificationPanel";
 import { EnhancedSegmentationCanvas } from "@/components/EnhancedSegmentationCanvas";
-import { VideoAnnotationCanvas } from "@/components/VideoAnnotationCanvas";
+
 import { AudioAnnotationCanvas } from "@/components/AudioAnnotationCanvas";
 import { TextAnnotationCanvas } from "@/components/TextAnnotationCanvas";
 import { ImageNavigationBar } from "@/components/ImageNavigationBar";

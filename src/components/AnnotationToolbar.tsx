@@ -11,7 +11,6 @@ const TOOLS = [
   { mode: "detection" as AnnotationMode, icon: Square, label: "Detection" },
   { mode: "classification" as AnnotationMode, icon: Tag, label: "Classification" },
   { mode: "segmentation" as AnnotationMode, icon: Scissors, label: "Segmentation" },
-  { mode: "video" as AnnotationMode, icon: Film, label: "Video" },
   { mode: "audio" as AnnotationMode, icon: Mic, label: "Audio" },
   { mode: "text" as AnnotationMode, icon: FileText, label: "Text" },
 ];
