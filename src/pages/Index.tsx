@@ -476,7 +476,7 @@ const Index = () => {
 
   return (
     <div className="h-screen flex flex-col bg-background">
-      <Header />
+      <Header mode={mode} images={images} labels={labels} />
       <div className="flex-1 flex overflow-hidden">
         {mode === "video" ? (
           <div className="w-64">
@@ -769,31 +769,35 @@ const Index = () => {
                     )}
                     {mode === "classification" && (
                       <>
-                        <ClassificationPanel
-                          imageUrl={img.url}
-                          tags={img.annotations.tags || []}
-                          labels={labels}
-                          onToggleTag={(labelId) => {
-                            setSelectedImageId(img.id);
-                            setImages(
-                              images.map((image) => {
-                                if (image.id !== img.id) return image;
-                                const tags = image.annotations.tags || [];
-                                const hasTag = tags.some((t) => t.labelId === labelId);
-                                return {
-                                  ...image,
-                                  annotations: {
-                                    ...image.annotations,
-                                    tags: hasTag
-                                      ? tags.filter((t) => t.labelId !== labelId)
-                                      : [...tags, { labelId }],
-                                  },
-                                };
-                              })
-                            );
-                          }}
-                        />
-                        <div className="absolute bottom-2 left-2 right-2 bg-card/90 backdrop-blur-sm px-2 py-1 rounded text-xs">
+                        <div 
+                          onClick={() => setSelectedImageId(img.id)}
+                          className="cursor-pointer relative h-full"
+                        >
+                          <ClassificationPanel
+                            imageUrl={img.url}
+                            tags={img.annotations.tags || []}
+                            labels={labels}
+                            onToggleTag={(labelId) => {
+                              setImages(
+                                images.map((image) => {
+                                  if (image.id !== img.id) return image;
+                                  const tags = image.annotations.tags || [];
+                                  const hasTag = tags.some((t) => t.labelId === labelId);
+                                  return {
+                                    ...image,
+                                    annotations: {
+                                      ...image.annotations,
+                                      tags: hasTag
+                                        ? tags.filter((t) => t.labelId !== labelId)
+                                        : [...tags, { labelId }],
+                                    },
+                                  };
+                                })
+                              );
+                            }}
+                          />
+                        </div>
+                        <div className="absolute bottom-2 left-2 right-2 bg-card/90 backdrop-blur-sm px-2 py-1 rounded text-xs pointer-events-none">
                           <div className="font-medium truncate">{img.name}</div>
                           <div className="text-muted-foreground">
                             {img.annotations.tags?.length || 0} tags
@@ -802,9 +806,11 @@ const Index = () => {
                       </>
                     )}
                     <div 
-                      className="absolute inset-0 pointer-events-none border-2 rounded-lg transition-all"
+                      onClick={() => setSelectedImageId(img.id)}
+                      className="absolute inset-0 pointer-events-auto border-2 rounded-lg transition-all cursor-pointer"
                       style={{ 
-                        borderColor: selectedImageId === img.id ? 'hsl(var(--primary))' : 'transparent' 
+                        borderColor: selectedImageId === img.id ? 'hsl(var(--primary))' : 'transparent',
+                        boxShadow: selectedImageId === img.id ? '0 0 0 3px hsl(var(--primary) / 0.2)' : 'none'
                       }}
                     />
                   </div>

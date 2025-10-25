@@ -1,7 +1,14 @@
 import { Layers } from "lucide-react";
 import { AppMenu } from "./AppMenu";
+import { AnnotationMode, ImageItem, Label } from "@/types/annotation";
 
-export const Header = () => {
+interface HeaderProps {
+  mode: AnnotationMode;
+  images: ImageItem[];
+  labels: Label[];
+}
+
+export const Header = ({ mode, images, labels }: HeaderProps) => {
   return (
     <header className="h-16 border-b bg-card flex items-center px-6 sticky top-0 z-50 backdrop-blur-sm bg-card/80">
       <div className="flex items-center gap-3 flex-1">
@@ -15,7 +22,7 @@ export const Header = () => {
           <p className="text-xs text-muted-foreground">Multi-Modal Annotation Platform</p>
         </div>
       </div>
-      <AppMenu />
+      <AppMenu mode={mode} images={images} labels={labels} />
     </header>
   );
 };
