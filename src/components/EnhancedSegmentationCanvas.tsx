@@ -3,7 +3,7 @@ import { SegmentationPolygon, SegmentationPoint, Label } from "@/types/annotatio
 import { ZoomIn, ZoomOut, Trash2, CheckCircle, X, Info, Pentagon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { WorkflowInfoCard } from "@/components/ui/workflow-info-card";
 import { toast } from "sonner";
 
 interface EnhancedSegmentationCanvasProps {
@@ -336,44 +336,24 @@ export const EnhancedSegmentationCanvas = ({
   return (
     <div className="w-full h-full flex flex-col bg-background relative">
       {/* Workflow Instructions - Hover to view */}
-      <HoverCard openDelay={200}>
-        <HoverCardTrigger asChild>
-          <Button
-            size="sm"
-            variant="outline"
-            className="absolute top-4 right-4 z-10 h-9 w-9 p-0 bg-card/95 backdrop-blur-sm shadow-lg"
-          >
-            <Info className="w-4 h-4" />
-          </Button>
-        </HoverCardTrigger>
-        <HoverCardContent className="w-80" side="left">
-          <div className="flex items-start gap-3">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <Pentagon className="w-4 h-4 text-primary" />
-            </div>
-            <div className="flex-1 space-y-2">
-              <h4 className="font-semibold text-sm">Segmentation Workflow</h4>
-              <ol className="text-xs text-muted-foreground space-y-1.5 list-decimal list-inside">
-                <li>Select a label from the sidebar</li>
-                <li>Click on the image to place polygon points</li>
-                <li>Continue clicking to add more points</li>
-                <li>Double-click or press Enter to complete the polygon</li>
-                <li>Press Escape to cancel the current polygon</li>
-                <li>Hover over polygons to see delete option</li>
-              </ol>
-              <div className="pt-2 border-t">
-                <p className="text-xs font-medium mb-1">Keyboard Shortcuts:</p>
-                <div className="text-[10px] text-muted-foreground space-y-1">
-                  <p>• <kbd className="px-1 rounded bg-muted">Shift+Drag</kbd> or <kbd className="px-1 rounded bg-muted">Middle Mouse</kbd> to pan</p>
-                  <p>• <kbd className="px-1 rounded bg-muted">Scroll</kbd> to zoom</p>
-                  <p>• <kbd className="px-1 rounded bg-muted">Enter</kbd> / <kbd className="px-1 rounded bg-muted">Double-click</kbd> to complete</p>
-                  <p>• <kbd className="px-1 rounded bg-muted">ESC</kbd> to cancel</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </HoverCardContent>
-      </HoverCard>
+      <WorkflowInfoCard
+        title="Segmentation Workflow"
+        icon={<Pentagon className="w-4 h-4 text-primary" />}
+        steps={[
+          { text: "Select a label from the sidebar" },
+          { text: "Click on the image to place polygon points" },
+          { text: "Continue clicking to add more points" },
+          { text: "Double-click or press Enter to complete the polygon" },
+          { text: "Press Escape to cancel the current polygon" },
+          { text: "Hover over polygons to see delete option" }
+        ]}
+        shortcuts={[
+          { keys: "Shift+Drag", description: "or Middle Mouse to pan" },
+          { keys: "Scroll", description: "to zoom" },
+          { keys: "Enter / Double-click", description: "to complete" },
+          { keys: "ESC", description: "to cancel" }
+        ]}
+      />
 
       {/* Status Bar */}
       {selectedLabelId && currentPoints.length > 0 && (

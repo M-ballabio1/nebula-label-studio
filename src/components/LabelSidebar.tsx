@@ -72,7 +72,7 @@ export const LabelSidebar = ({
           </h3>
           <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-              <Button size="sm" className="h-8 bg-gradient-hero hover:opacity-90 glow-primary">
+              <Button size="sm" className="h-8 bg-secondary hover:opacity-90 glow-primary">
                 <Plus className="w-4 h-4" />
               </Button>
             </DialogTrigger>

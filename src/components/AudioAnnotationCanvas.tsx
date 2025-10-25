@@ -4,7 +4,7 @@ import { Play, Pause, SkipBack, SkipForward, Trash2, Info, Music } from "lucide-
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { WorkflowInfoCard } from "@/components/ui/workflow-info-card";
 
 interface AudioAnnotationCanvasProps {
   audioUrl: string;
@@ -182,42 +182,22 @@ export const AudioAnnotationCanvas = ({
       <audio ref={audioRef} src={audioUrl} />
       
       {/* Workflow Instructions - Hover to view */}
-      <HoverCard openDelay={200}>
-        <HoverCardTrigger asChild>
-          <Button
-            size="sm"
-            variant="outline"
-            className="absolute top-4 right-4 z-10 h-9 w-9 p-0 bg-card/95 backdrop-blur-sm shadow-lg"
-          >
-            <Info className="w-4 h-4" />
-          </Button>
-        </HoverCardTrigger>
-        <HoverCardContent className="w-80" side="left">
-          <div className="flex items-start gap-3">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <Music className="w-4 h-4 text-primary" />
-            </div>
-            <div className="flex-1 space-y-2">
-              <h4 className="font-semibold text-sm">Audio Labeling Workflow</h4>
-              <ol className="text-xs text-muted-foreground space-y-1.5 list-decimal list-inside">
-                <li>Select a label from the sidebar</li>
-                <li>Click on the waveform to mark the start</li>
-                <li>Play through the segment</li>
-                <li>Click again to mark the end (min 0.1s)</li>
-                <li>Hover over segments to delete</li>
-              </ol>
-              <div className="pt-2 border-t">
-                <p className="text-xs font-medium mb-1">Keyboard Shortcuts:</p>
-                <div className="text-[10px] text-muted-foreground space-y-1">
-                  <p>• <kbd className="px-1 rounded bg-muted">Space</kbd> to play/pause</p>
-                  <p>• <kbd className="px-1 rounded bg-muted">←</kbd> skip back 5s</p>
-                  <p>• <kbd className="px-1 rounded bg-muted">→</kbd> skip forward 5s</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </HoverCardContent>
-      </HoverCard>
+      <WorkflowInfoCard
+        title="Audio Labeling Workflow"
+        icon={<Music className="w-4 h-4 text-primary" />}
+        steps={[
+          { text: "Select a label from the sidebar" },
+          { text: "Click on the waveform to mark the start" },
+          { text: "Play through the segment" },
+          { text: "Click again to mark the end (min 0.1s)" },
+          { text: "Hover over segments to delete" }
+        ]}
+        shortcuts={[
+          { keys: "Space", description: "to play/pause" },
+          { keys: "←", description: "skip back 5s" },
+          { keys: "→", description: "skip forward 5s" }
+        ]}
+      />
 
       {/* Status Bar */}
       <div className="px-4 pb-3">

@@ -3,7 +3,8 @@ import { BoundingBox, Label } from "@/types/annotation";
 import { Trash2, ZoomIn, ZoomOut, Copy, RotateCcw, Edit2, Info, Box, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { WorkflowInfoCard } from "@/components/ui/workflow-info-card";
+import { ImageNavigationControls } from "@/components/ui/image-navigation-controls";
 import { toast } from "sonner";
 
 interface EnhancedDetectionCanvasProps {
@@ -11,17 +12,22 @@ interface EnhancedDetectionCanvasProps {
   boxes: BoundingBox[];
   labels: Label[];
   selectedLabelId: string | null;
-  onAddBox: (box: Omit<BoundingBox, "id">) => void;
+  onAddBox: (box: BoundingBox) => void;
   onDeleteBox: (id: string) => void;
-  onUpdateBox: (id: string, box: Partial<BoundingBox>) => void;
-  onImageLoad?: (dimensions: { width: number; height: number }) => void;
-  onBoxSelect?: (box: BoundingBox | null) => void;
-  onBoxHover?: (box: BoundingBox | null) => void;
-  activeTool?: "select" | "pan" | "draw" | "erase" | "measure";
+  onUpdateBox: (id: string, updates: Partial<BoundingBox>) => void;
+  onImageLoad?: () => void;
+  onBoxSelect?: (id: string | null) => void;
+  onBoxHover?: (id: string | null) => void;
+  activeTool?: "draw" | "select" | "move" | "resize";
   imageTransform?: { rotation: number; flipH: boolean; flipV: boolean };
   imageFilters?: { brightness: number; contrast: number; saturation: number };
   showAnnotations?: boolean;
   lockAnnotations?: boolean;
+  currentImageName?: string;
+  canGoPrevious?: boolean;
+  canGoNext?: boolean;
+  onPrevious?: () => void;
+  onNext?: () => void;
 }
 
 type InteractionMode = "draw" | "select" | "move" | "resize";
@@ -43,6 +49,11 @@ export const EnhancedDetectionCanvas = ({
   imageFilters = { brightness: 100, contrast: 100, saturation: 100 },
   showAnnotations = true,
   lockAnnotations = false,
+  currentImageName,
+  canGoPrevious = false,
+  canGoNext = false,
+  onPrevious,
+  onNext,
 }: EnhancedDetectionCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -520,52 +531,22 @@ export const EnhancedDetectionCanvas = ({
   return (
     <div className="w-full h-full flex flex-col bg-background relative">
       {/* Workflow Instructions - Hover to view */}
-      <HoverCard openDelay={200}>
-        <HoverCardTrigger asChild>
-          <Button
-            size="sm"
-            variant="outline"
-            className="absolute top-4 right-4 z-10 h-9 w-9 p-0 bg-card/95 backdrop-blur-sm shadow-lg"
-          >
-            <Info className="w-4 h-4" />
-          </Button>
-        </HoverCardTrigger>
-        <HoverCardContent className="w-80" side="left">
-          <div className="flex items-start gap-3">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <Tag className="w-4 h-4 text-primary" />
-            </div>
-            <div className="flex-1 space-y-2">
-              <h4 className="font-semibold text-sm">Detection Workflow</h4>
-              <ol className="text-xs text-muted-foreground space-y-1.5 list-decimal list-inside">
-                <li>Select a label from the sidebar</li>
-                <li>Click and drag on the image to draw a bounding box</li>
-                <li>Release to complete the box</li>
-                <li>Repeat for multiple objects</li>
-                <li>Hover over boxes to see delete option</li>
-              </ol>
-              <div className="pt-2 border-t">
-                <p className="text-xs font-medium mb-1">Keyboard Shortcuts:</p>
-                <div className="text-[10px] text-muted-foreground space-y-1">
-                  <p>• <kbd className="px-1 rounded bg-muted">Shift+Drag</kbd> or <kbd className="px-1 rounded bg-muted">Middle Mouse</kbd> to pan</p>
-                  <p>• <kbd className="px-1 rounded bg-muted">Scroll</kbd> to zoom</p>
-                  <p>• <kbd className="px-1 rounded bg-muted">ESC</kbd> to cancel drawing</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </HoverCardContent>
-      </HoverCard>
-
-      {/* Status Bar */}
-      {selectedLabelId && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10">
-          <Badge className="bg-primary text-primary-foreground px-4 py-2 shadow-lg">
-            <Box className="w-3 h-3 mr-2" />
-            Drawing: {labels.find(l => l.id === selectedLabelId)?.name}
-          </Badge>
-        </div>
-      )}
+      <WorkflowInfoCard
+        title="Detection Workflow"
+        icon={<Tag className="w-4 h-4 text-primary" />}
+        steps={[
+          { text: "Select a label from the sidebar" },
+          { text: "Click and drag on the image to draw a bounding box" },
+          { text: "Release to complete the box" },
+          { text: "Repeat for multiple objects" },
+          { text: "Hover over boxes to see delete option" }
+        ]}
+        shortcuts={[
+          { keys: "Shift+Drag", description: "or Middle Mouse to pan" },
+          { keys: "Scroll", description: "to zoom" },
+          { keys: "ESC", description: "to cancel drawing" }
+        ]}
+      />
 
       <div className="p-3 border-b bg-card flex items-center gap-2 flex-wrap">
         <div className="flex items-center gap-2">
@@ -611,6 +592,16 @@ export const EnhancedDetectionCanvas = ({
             Reset
           </Button>
         </div>
+        
+        {/* Navigation Controls - Center */}
+        <ImageNavigationControls
+          currentImageName={currentImageName}
+          currentImageUrl={imageUrl}
+          canGoPrevious={canGoPrevious}
+          canGoNext={canGoNext}
+          onPrevious={onPrevious}
+          onNext={onNext}
+        />
         
         <div className="flex-1" />
         

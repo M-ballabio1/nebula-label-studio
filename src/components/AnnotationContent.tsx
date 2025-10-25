@@ -49,6 +49,11 @@ interface AnnotationContentProps {
   imageFilters?: { brightness: number; contrast: number; saturation: number };
   showAnnotations?: boolean;
   lockAnnotations?: boolean;
+  currentImageName?: string;
+  canGoPrevious?: boolean;
+  canGoNext?: boolean;
+  onPrevious?: () => void;
+  onNext?: () => void;
 }
 
 export const AnnotationContent = ({
@@ -89,6 +94,11 @@ export const AnnotationContent = ({
   imageFilters,
   showAnnotations,
   lockAnnotations,
+  currentImageName,
+  canGoPrevious,
+  canGoNext,
+  onPrevious,
+  onNext,
 }: AnnotationContentProps) => {
   const displayImages = getDisplayImages(gridMode, selectedImage, filteredImages);
 
@@ -116,6 +126,16 @@ export const AnnotationContent = ({
             }}
             onBoxSelect={onBoxSelect}
             onBoxHover={onBoxHover}
+            activeTool={activeTool}
+            imageTransform={imageTransform}
+            imageFilters={imageFilters}
+            showAnnotations={showAnnotations}
+            lockAnnotations={lockAnnotations}
+            currentImageName={currentImageName}
+            canGoPrevious={canGoPrevious}
+            canGoNext={canGoNext}
+            onPrevious={onPrevious}
+            onNext={onNext}
           />
         )}
         {selectedImage && mode === "classification" && (

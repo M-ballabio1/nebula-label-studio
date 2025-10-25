@@ -1,9 +1,7 @@
 import { useState } from "react";
-import { Header } from "@/components/Header";
 import { AnnotationModeSelector } from "@/components/AnnotationModeSelector";
 import { AnnotationToolbar } from "@/components/AnnotationToolbar";
 import { ThumbnailGallery } from "@/components/ThumbnailGallery";
-import { ImageNavigationBar } from "@/components/ImageNavigationBar";
 import { ImageFilterBar } from "@/components/ImageFilterBar";
 import { SidebarContent } from "@/components/SidebarContent";
 import { AnnotationContent } from "@/components/AnnotationContent";
@@ -147,7 +145,6 @@ const Index = () => {
 
   return (
     <div className="h-screen flex flex-col bg-background">
-      <Header mode={mode} images={images} labels={labels} />
       <div className="flex-1 flex overflow-hidden">
         <SidebarContent
           mode={mode}
@@ -173,7 +170,7 @@ const Index = () => {
         />
 
         <div className="flex-1 flex flex-col overflow-hidden">
-          <AnnotationModeSelector mode={mode} onModeChange={setMode} />
+          <AnnotationModeSelector mode={mode} onModeChange={setMode} images={images} labels={labels} />
           <AnnotationToolbar
             activeTool={canvasTool}
             onToolChange={setCanvasTool}
@@ -204,21 +201,6 @@ const Index = () => {
             />
           )}
 
-          {mode === "detection" && (
-            <ImageNavigationBar
-              currentImageName={selectedImage?.name || ""}
-              currentImagePath={selectedImage?.url || ""}
-              canGoPrevious={canGoPrevious}
-              canGoNext={canGoNext}
-              onPrevious={handlePreviousImage}
-              onNext={handleNextImage}
-              zoom={zoom}
-              onZoomIn={handleZoomIn}
-              onZoomOut={handleZoomOut}
-              onZoomReset={handleZoomReset}
-            />
-          )}
-
           <div className="flex-1 overflow-auto bg-muted/20">
             <AnnotationContent
               mode={mode}
@@ -235,6 +217,11 @@ const Index = () => {
               onAddBox={handleAddBox}
               onDeleteBox={handleDeleteBox}
               onUpdateBox={handleUpdateBox}
+              currentImageName={selectedImage?.name}
+              canGoPrevious={canGoPrevious}
+              canGoNext={canGoNext}
+              onPrevious={handlePreviousImage}
+              onNext={handleNextImage}
               onAddPolygon={handleAddPolygon}
               onDeletePolygon={handleDeletePolygon}
               onToggleTag={handleToggleTag}

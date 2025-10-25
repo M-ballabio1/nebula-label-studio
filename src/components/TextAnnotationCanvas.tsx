@@ -3,7 +3,7 @@ import { Type, Info, MousePointerClick } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { WorkflowInfoCard } from "@/components/ui/workflow-info-card";
 
 interface TextAnnotationCanvasProps {
   text: string;
@@ -96,40 +96,20 @@ export const TextAnnotationCanvas = ({
   return (
     <div className="flex-1 flex flex-col bg-background overflow-hidden relative">
       {/* Workflow Instructions - Hover to view */}
-      <HoverCard openDelay={200}>
-        <HoverCardTrigger asChild>
-          <Button
-            size="sm"
-            variant="outline"
-            className="absolute top-4 right-4 z-10 h-9 w-9 p-0 bg-card/95 backdrop-blur-sm shadow-lg"
-          >
-            <Info className="w-4 h-4" />
-          </Button>
-        </HoverCardTrigger>
-        <HoverCardContent className="w-80" side="left">
-          <div className="flex items-start gap-3">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <Type className="w-4 h-4 text-primary" />
-            </div>
-            <div className="flex-1 space-y-2">
-              <h4 className="font-semibold text-sm">Text Labeling Workflow</h4>
-              <ol className="text-xs text-muted-foreground space-y-1.5 list-decimal list-inside">
-                <li>Select a label from the sidebar</li>
-                <li>Click and drag to select text</li>
-                <li>Release to apply the label</li>
-                <li>Repeat for different text spans</li>
-                <li>Annotations can overlap if needed</li>
-              </ol>
-              <div className="pt-2 border-t">
-                <p className="text-xs font-medium mb-1">Tip:</p>
-                <div className="text-[10px] text-muted-foreground">
-                  <p>• Annotate the same text with multiple labels</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </HoverCardContent>
-      </HoverCard>
+      <WorkflowInfoCard
+        title="Text Labeling Workflow"
+        icon={<Type className="w-4 h-4 text-primary" />}
+        steps={[
+          { text: "Select a label from the sidebar" },
+          { text: "Click and drag to select text" },
+          { text: "Release to apply the label" },
+          { text: "Repeat for different text spans" },
+          { text: "Annotations can overlap if needed" }
+        ]}
+        shortcuts={[
+          { keys: "Annotate the same text", description: "with multiple labels" }
+        ]}
+      />
 
       {/* Status Bar */}
       <div className="px-4 pb-3 border-b bg-card/50">

@@ -31,12 +31,7 @@ export const Header = ({ mode, images, labels }: HeaderProps) => {
             </p>
           </div>
         </div>
-        <AppMenu 
-          mode={mode} 
-          images={images} 
-          labels={labels}
-          onOpenSettings={() => setSettingsOpen(true)}
-        />
+        
       </header>
       <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
     </>
