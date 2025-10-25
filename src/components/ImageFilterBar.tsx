@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 
-type GridMode = "single" | "grid4" | "grid6" | "grid8";
+type GridMode = "single" | "grid4" | "grid6" | "grid8" | "grid12";
 
 interface ImageFilterBarProps {
   labels: Label[];
@@ -202,6 +202,14 @@ export const ImageFilterBar = ({
               className="h-8 px-2"
             >
               2×4
+            </Button>
+            <Button
+              size="sm"
+              variant={gridMode === "grid12" ? "default" : "secondary"}
+              onClick={() => onGridModeChange("grid12")}
+              className="h-8 px-2"
+            >
+              3×4
             </Button>
           </div>
         </>

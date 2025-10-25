@@ -1,4 +1,5 @@
 import { Header } from "@/components/Header";
+import { AnnotationModeSelector } from "@/components/AnnotationModeSelector";
 import { AnnotationToolbar } from "@/components/AnnotationToolbar";
 import { ThumbnailGallery } from "@/components/ThumbnailGallery";
 import { ImageNavigationBar } from "@/components/ImageNavigationBar";
@@ -110,7 +111,8 @@ const Index = () => {
         />
 
         <div className="flex-1 flex flex-col overflow-hidden">
-          <AnnotationToolbar mode={mode} onModeChange={setMode} />
+          <AnnotationModeSelector mode={mode} onModeChange={setMode} />
+          <AnnotationToolbar />
 
           {(mode === "detection" ||
             mode === "segmentation" ||
