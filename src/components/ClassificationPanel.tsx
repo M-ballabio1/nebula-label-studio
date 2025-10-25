@@ -2,8 +2,8 @@ import { Label, ClassificationTag } from "@/types/annotation";
 import { useRef, useEffect, useState } from "react";
 import { ZoomIn, ZoomOut, RotateCcw, Info, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 
 interface ClassificationPanelProps {
   imageUrl: string;
@@ -24,6 +24,7 @@ export const ClassificationPanel = ({
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+  const [isHoveringCanvas, setIsHoveringCanvas] = useState(false);
 
   useEffect(() => {
     const img = new Image();
@@ -103,34 +104,42 @@ export const ClassificationPanel = ({
 
   return (
     <div className="w-full h-full flex flex-col bg-background relative">
-      {/* Workflow Instructions */}
-      <Card className="absolute top-4 right-4 z-10 p-4 w-80 bg-card/95 backdrop-blur-sm shadow-lg">
-        <div className="flex items-start gap-3">
-          <div className="p-2 rounded-lg bg-primary/10">
-            <Info className="w-4 h-4 text-primary" />
-          </div>
-          <div className="flex-1 space-y-2">
-            <h4 className="font-semibold text-sm flex items-center gap-2">
-              <Tag className="w-4 h-4" />
-              Classification Workflow
-            </h4>
-            <ol className="text-xs text-muted-foreground space-y-1.5 list-decimal list-inside">
-              <li>View the entire image to understand the content</li>
-              <li>Click on labels in the sidebar to assign tags</li>
-              <li>Multiple tags can be assigned to a single image</li>
-              <li>Click again to remove a tag</li>
-              <li>Use zoom controls to inspect details if needed</li>
-            </ol>
-            <div className="pt-2 border-t">
-              <p className="text-xs font-medium mb-1">Tips:</p>
-              <div className="text-[10px] text-muted-foreground space-y-1">
-                <p>• Classification assigns labels to the entire image</p>
-                <p>• Use for categorizing images by theme or content</p>
+      {/* Workflow Instructions - Hover to view */}
+      <HoverCard openDelay={200}>
+        <HoverCardTrigger asChild>
+          <Button
+            size="sm"
+            variant="outline"
+            className="absolute top-4 right-4 z-10 h-9 w-9 p-0 bg-card/95 backdrop-blur-sm shadow-lg"
+          >
+            <Info className="w-4 h-4" />
+          </Button>
+        </HoverCardTrigger>
+        <HoverCardContent className="w-80" side="left">
+          <div className="flex items-start gap-3">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <Tag className="w-4 h-4 text-primary" />
+            </div>
+            <div className="flex-1 space-y-2">
+              <h4 className="font-semibold text-sm">Classification Workflow</h4>
+              <ol className="text-xs text-muted-foreground space-y-1.5 list-decimal list-inside">
+                <li>View the entire image to understand the content</li>
+                <li>Click on labels in the sidebar to assign tags</li>
+                <li>Multiple tags can be assigned to a single image</li>
+                <li>Click again to remove a tag</li>
+                <li>Use zoom controls to inspect details if needed</li>
+              </ol>
+              <div className="pt-2 border-t">
+                <p className="text-xs font-medium mb-1">Tips:</p>
+                <div className="text-[10px] text-muted-foreground space-y-1">
+                  <p>• Classification assigns labels to the entire image</p>
+                  <p>• Use for categorizing images by theme or content</p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </Card>
+        </HoverCardContent>
+      </HoverCard>
 
       <div className="p-3 border-b bg-card flex items-center gap-2 flex-wrap">
         <div className="flex items-center gap-2">
@@ -164,6 +173,11 @@ export const ClassificationPanel = ({
         <div className="flex-1" />
         
         <div className="flex items-center gap-2">
+          {isHoveringCanvas && (
+            <Badge variant="outline" className="text-xs">
+              Shift+Drag or Middle mouse to pan • Scroll to zoom
+            </Badge>
+          )}
           <span className="text-xs font-medium text-muted-foreground px-2 py-1 rounded bg-muted">
             Zoom: {Math.round(zoom * 100)}%
           </span>
@@ -175,7 +189,11 @@ export const ClassificationPanel = ({
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
+          onMouseLeave={() => {
+            handleMouseUp();
+            setIsHoveringCanvas(false);
+          }}
+          onMouseEnter={() => setIsHoveringCanvas(true)}
           onWheel={handleWheel}
           style={{ 
             cursor: isPanning ? "grabbing" : "default",

@@ -1,8 +1,9 @@
 import { TextAnnotation, Label } from "@/types/annotation";
 import { Type, Info, MousePointerClick } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 
 interface TextAnnotationCanvasProps {
   text: string;
@@ -93,38 +94,42 @@ export const TextAnnotationCanvas = ({
   const selectedLabel = labels.find(l => l.id === selectedLabelId);
 
   return (
-    <div className="flex-1 flex flex-col bg-background overflow-hidden">
-      {/* Instructions Panel */}
-      <Card className="m-4 p-4 bg-primary/5 border-primary/20">
-        <div className="flex items-start gap-3">
-          <Info className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-          <div className="flex-1 space-y-2">
-            <h4 className="font-semibold text-sm">How to Label Text</h4>
-            <ol className="text-sm text-muted-foreground space-y-1.5">
-              <li className="flex items-start gap-2">
-                <span className="font-semibold text-primary">1.</span>
-                <span>Select a label category from the sidebar on the left</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="font-semibold text-primary">2.</span>
-                <span>Highlight the text you want to annotate by clicking and dragging</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="font-semibold text-primary">3.</span>
-                <span>Release your mouse - the annotation is created automatically</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="font-semibold text-primary">4.</span>
-                <span>View and manage all annotations in the right sidebar</span>
-              </li>
-            </ol>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2 border-t">
-              <MousePointerClick className="w-3 h-3" />
-              <span>Tip: Overlapping annotations are allowed - annotate the same text with multiple labels</span>
+    <div className="flex-1 flex flex-col bg-background overflow-hidden relative">
+      {/* Workflow Instructions - Hover to view */}
+      <HoverCard openDelay={200}>
+        <HoverCardTrigger asChild>
+          <Button
+            size="sm"
+            variant="outline"
+            className="absolute top-4 right-4 z-10 h-9 w-9 p-0 bg-card/95 backdrop-blur-sm shadow-lg"
+          >
+            <Info className="w-4 h-4" />
+          </Button>
+        </HoverCardTrigger>
+        <HoverCardContent className="w-80" side="left">
+          <div className="flex items-start gap-3">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <Type className="w-4 h-4 text-primary" />
+            </div>
+            <div className="flex-1 space-y-2">
+              <h4 className="font-semibold text-sm">Text Labeling Workflow</h4>
+              <ol className="text-xs text-muted-foreground space-y-1.5 list-decimal list-inside">
+                <li>Select a label from the sidebar</li>
+                <li>Click and drag to select text</li>
+                <li>Release to apply the label</li>
+                <li>Repeat for different text spans</li>
+                <li>Annotations can overlap if needed</li>
+              </ol>
+              <div className="pt-2 border-t">
+                <p className="text-xs font-medium mb-1">Tip:</p>
+                <div className="text-[10px] text-muted-foreground">
+                  <p>• Annotate the same text with multiple labels</p>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </Card>
+        </HoverCardContent>
+      </HoverCard>
 
       {/* Status Bar */}
       <div className="px-4 pb-3 border-b bg-card/50">

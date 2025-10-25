@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { BoundingBox, Label } from "@/types/annotation";
-import { Trash2, ZoomIn, ZoomOut, Copy, RotateCcw, Edit2, Info, Box } from "lucide-react";
+import { Trash2, ZoomIn, ZoomOut, Copy, RotateCcw, Edit2, Info, Box, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { toast } from "sonner";
 
 interface EnhancedDetectionCanvasProps {
@@ -62,6 +62,7 @@ export const EnhancedDetectionCanvas = ({
   const [mode, setMode] = useState<InteractionMode>("draw");
   const [resizeHandle, setResizeHandle] = useState<ResizeHandle>(null);
   const [copiedBox, setCopiedBox] = useState<Omit<BoundingBox, "id"> | null>(null);
+  const [isHoveringCanvas, setIsHoveringCanvas] = useState(false);
 
   useEffect(() => {
     const img = new Image();
@@ -518,38 +519,43 @@ export const EnhancedDetectionCanvas = ({
 
   return (
     <div className="w-full h-full flex flex-col bg-background relative">
-      {/* Workflow Instructions */}
-      <Card className="absolute top-4 right-4 z-10 p-4 w-80 bg-card/95 backdrop-blur-sm shadow-lg">
-        <div className="flex items-start gap-3">
-          <div className="p-2 rounded-lg bg-primary/10">
-            <Info className="w-4 h-4 text-primary" />
-          </div>
-          <div className="flex-1 space-y-2">
-            <h4 className="font-semibold text-sm flex items-center gap-2">
-              <Box className="w-4 h-4" />
-              Detection Workflow
-            </h4>
-            <ol className="text-xs text-muted-foreground space-y-1.5 list-decimal list-inside">
-              <li>Select a label from the sidebar</li>
-              <li>Click and drag on the image to draw a bounding box</li>
-              <li>Click on existing boxes to select and edit them</li>
-              <li>Use resize handles to adjust box dimensions</li>
-              <li>Press <kbd className="px-1 py-0.5 bg-muted rounded text-[10px]">Delete</kbd> to remove selected box</li>
-            </ol>
-            <div className="pt-2 border-t">
-              <p className="text-xs font-medium mb-1">Keyboard Shortcuts:</p>
-              <div className="flex flex-wrap gap-1 text-[10px]">
-                <Badge variant="secondary" className="font-mono">Shift+Drag</Badge>
-                <span className="text-muted-foreground">Pan</span>
-                <Badge variant="secondary" className="font-mono">Ctrl+C/V</Badge>
-                <span className="text-muted-foreground">Copy/Paste</span>
-                <Badge variant="secondary" className="font-mono">1-9</Badge>
-                <span className="text-muted-foreground">Quick label</span>
+      {/* Workflow Instructions - Hover to view */}
+      <HoverCard openDelay={200}>
+        <HoverCardTrigger asChild>
+          <Button
+            size="sm"
+            variant="outline"
+            className="absolute top-4 right-4 z-10 h-9 w-9 p-0 bg-card/95 backdrop-blur-sm shadow-lg"
+          >
+            <Info className="w-4 h-4" />
+          </Button>
+        </HoverCardTrigger>
+        <HoverCardContent className="w-80" side="left">
+          <div className="flex items-start gap-3">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <Tag className="w-4 h-4 text-primary" />
+            </div>
+            <div className="flex-1 space-y-2">
+              <h4 className="font-semibold text-sm">Detection Workflow</h4>
+              <ol className="text-xs text-muted-foreground space-y-1.5 list-decimal list-inside">
+                <li>Select a label from the sidebar</li>
+                <li>Click and drag on the image to draw a bounding box</li>
+                <li>Release to complete the box</li>
+                <li>Repeat for multiple objects</li>
+                <li>Hover over boxes to see delete option</li>
+              </ol>
+              <div className="pt-2 border-t">
+                <p className="text-xs font-medium mb-1">Keyboard Shortcuts:</p>
+                <div className="text-[10px] text-muted-foreground space-y-1">
+                  <p>• <kbd className="px-1 rounded bg-muted">Shift+Drag</kbd> or <kbd className="px-1 rounded bg-muted">Middle Mouse</kbd> to pan</p>
+                  <p>• <kbd className="px-1 rounded bg-muted">Scroll</kbd> to zoom</p>
+                  <p>• <kbd className="px-1 rounded bg-muted">ESC</kbd> to cancel drawing</p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </Card>
+        </HoverCardContent>
+      </HoverCard>
 
       {/* Status Bar */}
       {selectedLabelId && (
@@ -650,12 +656,23 @@ export const EnhancedDetectionCanvas = ({
         )}
       </div>
       <div ref={containerRef} className="flex-1 relative bg-muted/20 flex items-center justify-center">
+        {isHoveringCanvas && (
+          <div className="absolute bottom-4 left-4 z-10">
+            <Badge variant="outline" className="text-xs bg-card/95 backdrop-blur-sm shadow-lg animate-fade-in">
+              Click and drag to draw • Complete when done • Shift+Drag or Middle mouse to pan
+            </Badge>
+          </div>
+        )}
         <canvas
           ref={canvasRef}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
+          onMouseLeave={() => {
+            handleMouseUp();
+            setIsHoveringCanvas(false);
+          }}
+          onMouseEnter={() => setIsHoveringCanvas(true)}
           onWheel={handleWheel}
           style={{ 
             cursor: isPanning ? "grabbing" : 

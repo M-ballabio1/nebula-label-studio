@@ -3,8 +3,8 @@ import { AudioSegment, Label } from "@/types/annotation";
 import { Play, Pause, SkipBack, SkipForward, Trash2, Info, Music } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 
 interface AudioAnnotationCanvasProps {
   audioUrl: string;
@@ -178,41 +178,46 @@ export const AudioAnnotationCanvas = ({
   const selectedLabel = labels.find(l => l.id === selectedLabelId);
 
   return (
-    <div className="flex-1 flex flex-col bg-background overflow-hidden">
+    <div className="flex-1 flex flex-col bg-background overflow-hidden relative">
       <audio ref={audioRef} src={audioUrl} />
       
-      {/* Instructions Panel */}
-      <Card className="m-4 p-4 bg-primary/5 border-primary/20">
-        <div className="flex items-start gap-3">
-          <Info className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-          <div className="flex-1 space-y-2">
-            <h4 className="font-semibold text-sm">How to Label Audio Segments</h4>
-            <ol className="text-sm text-muted-foreground space-y-1.5">
-              <li className="flex items-start gap-2">
-                <span className="font-semibold text-primary">1.</span>
-                <span>Select a label from the sidebar on the left</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="font-semibold text-primary">2.</span>
-                <span>Click on the waveform to mark the start of your segment</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="font-semibold text-primary">3.</span>
-                <span>Click again to mark the end (minimum 0.1 seconds duration)</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="font-semibold text-primary">4.</span>
-                <span>Hover over segments and click <Trash2 className="w-3 h-3 inline mx-1" /> to delete</span>
-              </li>
-            </ol>
-            <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2 border-t">
-              <span>⌨️ Keyboard: Space = Play/Pause</span>
-              <span>← = Skip -5s</span>
-              <span>→ = Skip +5s</span>
+      {/* Workflow Instructions - Hover to view */}
+      <HoverCard openDelay={200}>
+        <HoverCardTrigger asChild>
+          <Button
+            size="sm"
+            variant="outline"
+            className="absolute top-4 right-4 z-10 h-9 w-9 p-0 bg-card/95 backdrop-blur-sm shadow-lg"
+          >
+            <Info className="w-4 h-4" />
+          </Button>
+        </HoverCardTrigger>
+        <HoverCardContent className="w-80" side="left">
+          <div className="flex items-start gap-3">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <Music className="w-4 h-4 text-primary" />
+            </div>
+            <div className="flex-1 space-y-2">
+              <h4 className="font-semibold text-sm">Audio Labeling Workflow</h4>
+              <ol className="text-xs text-muted-foreground space-y-1.5 list-decimal list-inside">
+                <li>Select a label from the sidebar</li>
+                <li>Click on the waveform to mark the start</li>
+                <li>Play through the segment</li>
+                <li>Click again to mark the end (min 0.1s)</li>
+                <li>Hover over segments to delete</li>
+              </ol>
+              <div className="pt-2 border-t">
+                <p className="text-xs font-medium mb-1">Keyboard Shortcuts:</p>
+                <div className="text-[10px] text-muted-foreground space-y-1">
+                  <p>• <kbd className="px-1 rounded bg-muted">Space</kbd> to play/pause</p>
+                  <p>• <kbd className="px-1 rounded bg-muted">←</kbd> skip back 5s</p>
+                  <p>• <kbd className="px-1 rounded bg-muted">→</kbd> skip forward 5s</p>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </Card>
+        </HoverCardContent>
+      </HoverCard>
 
       {/* Status Bar */}
       <div className="px-4 pb-3">
