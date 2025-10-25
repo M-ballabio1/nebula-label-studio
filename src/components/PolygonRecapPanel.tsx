@@ -61,7 +61,7 @@ export const PolygonRecapPanel = ({
                       </div>
                       <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-muted-foreground">
                         <div>Points: {polygon.points.length}</div>
-                        <div>Center: ({avgX.toFixed(0)}, {avgY.toFixed(0)})</div>
+                        <div>Center: ({avgX.toFixed(3)}, {avgY.toFixed(3)})</div>
                       </div>
                     </div>
                     <Button

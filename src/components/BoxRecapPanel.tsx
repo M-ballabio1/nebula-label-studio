@@ -74,24 +74,24 @@ export const BoxRecapPanel = ({
                 <div className="text-[10px] font-mono text-muted-foreground space-y-0.5">
                   <div className="flex justify-between">
                     <span>X:</span>
-                    <span>{box.x.toFixed(1)}</span>
+                    <span>{box.x.toFixed(3)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Y:</span>
-                    <span>{box.y.toFixed(1)}</span>
+                    <span>{box.y.toFixed(3)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>W:</span>
-                    <span>{box.width.toFixed(1)}</span>
+                    <span>{box.width.toFixed(3)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>H:</span>
-                    <span>{box.height.toFixed(1)}</span>
+                    <span>{box.height.toFixed(3)}</span>
                   </div>
                   <Separator className="my-1" />
                   <div className="flex justify-between">
                     <span>Area:</span>
-                    <span>{(box.width * box.height).toFixed(0)} px²</span>
+                    <span>{(box.width * box.height).toFixed(5)}</span>
                   </div>
                 </div>
               </div>
