@@ -3,6 +3,7 @@ import { Header } from "@/components/Header";
 import { AnnotationModeSelector } from "@/components/AnnotationModeSelector";
 import { AnnotationToolbar } from "@/components/AnnotationToolbar";
 import { ThumbnailGallery } from "@/components/ThumbnailGallery";
+import { ImageNavigationBar } from "@/components/ImageNavigationBar";
 import { ImageFilterBar } from "@/components/ImageFilterBar";
 import { SidebarContent } from "@/components/SidebarContent";
 import { AnnotationContent } from "@/components/AnnotationContent";
@@ -13,17 +14,13 @@ import { useImageFilters } from "@/hooks/useImageFilters";
 import { useImageNavigation } from "@/hooks/useImageNavigation";
 import { useAnnotationHandlers } from "@/hooks/useAnnotationHandlers";
 import { useGridAnnotationHandlers } from "@/hooks/useGridAnnotationHandlers";
-import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { useHotkeys } from "@/hooks/useHotkeys";
 import { toast } from "sonner";
 
 const Index = () => {
   const [showExportModal, setShowExportModal] = useState(false);
   const [showSaveAnimation, setShowSaveAnimation] = useState(false);
-  const [annotationsVisible, setAnnotationsVisible] = useState(true);
-  const [annotationsLocked, setAnnotationsLocked] = useState(false);
-  const [brightness, setBrightness] = useState(100);
-  const [contrast, setContrast] = useState(100);
-  const [saturation, setSaturation] = useState(100);
+  const [zoom, setZoom] = useState(1);
 
   const {
     mode,
@@ -92,15 +89,7 @@ const Index = () => {
     handleGridToggleTag,
   } = useGridAnnotationHandlers(images, setImages, setSelectedImageId);
 
-  useKeyboardShortcuts({
-    labels,
-    onSelectLabel: setSelectedLabelId,
-    onPreviousImage: handlePreviousImage,
-    onNextImage: handleNextImage,
-    onSave: () => setShowSaveAnimation(true),
-    canGoPrevious,
-    canGoNext,
-  });
+  useHotkeys(labels, setSelectedLabelId);
 
   const handleSave = () => {
     setShowSaveAnimation(true);
@@ -110,16 +99,20 @@ const Index = () => {
     setShowExportModal(true);
   };
 
-  const handleResetFilters = () => {
-    setBrightness(100);
-    setContrast(100);
-    setSaturation(100);
-    toast.success("Filters reset");
+  const handleZoomIn = () => {
+    setZoom((z) => Math.min(3, z * 1.2));
+    toast.info(`Zoom: ${Math.round(Math.min(3, zoom * 1.2) * 100)}%`);
   };
 
-  const handleRotate = () => toast.info("Rotate 90° clockwise");
-  const handleFlipH = () => toast.info("Flip horizontal");
-  const handleFlipV = () => toast.info("Flip vertical");
+  const handleZoomOut = () => {
+    setZoom((z) => Math.max(0.5, z / 1.2));
+    toast.info(`Zoom: ${Math.round(Math.max(0.5, zoom / 1.2) * 100)}%`);
+  };
+
+  const handleZoomReset = () => {
+    setZoom(1);
+    toast.info("Zoom reset to 100%");
+  };
 
   return (
     <div className="h-screen flex flex-col bg-background">
@@ -153,26 +146,6 @@ const Index = () => {
           <AnnotationToolbar
             onSave={handleSave}
             onExport={handleExport}
-            currentImageName={selectedImage?.name}
-            currentImagePath={selectedImage?.url}
-            canGoPrevious={canGoPrevious}
-            canGoNext={canGoNext}
-            onPrevious={handlePreviousImage}
-            onNext={handleNextImage}
-            annotationsVisible={annotationsVisible}
-            annotationsLocked={annotationsLocked}
-            onToggleVisibility={() => setAnnotationsVisible(!annotationsVisible)}
-            onToggleLock={() => setAnnotationsLocked(!annotationsLocked)}
-            brightness={brightness}
-            contrast={contrast}
-            saturation={saturation}
-            onBrightnessChange={setBrightness}
-            onContrastChange={setContrast}
-            onSaturationChange={setSaturation}
-            onRotate={handleRotate}
-            onFlipH={handleFlipH}
-            onFlipV={handleFlipV}
-            onResetFilters={handleResetFilters}
           />
 
           {(mode === "detection" ||
@@ -187,6 +160,21 @@ const Index = () => {
               gridMode={gridMode}
               onGridModeChange={setGridMode}
               mode={mode}
+            />
+          )}
+
+          {mode === "detection" && (
+            <ImageNavigationBar
+              currentImageName={selectedImage?.name || ""}
+              currentImagePath={selectedImage?.url || ""}
+              canGoPrevious={canGoPrevious}
+              canGoNext={canGoNext}
+              onPrevious={handlePreviousImage}
+              onNext={handleNextImage}
+              zoom={zoom}
+              onZoomIn={handleZoomIn}
+              onZoomOut={handleZoomOut}
+              onZoomReset={handleZoomReset}
             />
           )}
 

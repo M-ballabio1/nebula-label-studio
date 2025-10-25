@@ -1,5 +1,6 @@
 import { EnhancedDetectionCanvas } from "./EnhancedDetectionCanvas";
 import { ImageItem, Label, BoundingBox } from "@/types/annotation";
+import { getGridImageHeight } from "@/utils/gridUtils";
 import { GridMode } from "@/types/gridMode";
 
 interface GridDetectionViewProps {
@@ -31,38 +32,8 @@ export const GridDetectionView = ({
   onBoxHover,
   onImageLoad,
 }: GridDetectionViewProps) => {
-  const getGridClass = (): string => {
-    switch (gridMode) {
-      case "grid4":
-        return "grid grid-cols-2 gap-4";
-      case "grid6":
-        return "grid grid-cols-3 gap-4";
-      case "grid8":
-        return "grid grid-cols-4 gap-4";
-      case "grid12":
-        return "grid grid-cols-4 gap-3";
-      default:
-        return "";
-    }
-  };
-
-  const getImageHeight = (): string => {
-    switch (gridMode) {
-      case "grid4":
-        return "450px";
-      case "grid6":
-        return "380px";
-      case "grid8":
-        return "320px";
-      case "grid12":
-        return "280px";
-      default:
-        return "400px";
-    }
-  };
-
   return (
-    <div className={getGridClass()}>
+    <>
       {images.map((img) => (
         <div
           key={img.id}
@@ -71,7 +42,7 @@ export const GridDetectionView = ({
               ? "border-primary shadow-lg"
               : "border-border hover:border-primary/50"
           }`}
-          style={{ height: getImageHeight() }}
+          style={{ minHeight: getGridImageHeight(gridMode) }}
         >
           <EnhancedDetectionCanvas
             imageUrl={img.url}
@@ -102,12 +73,8 @@ export const GridDetectionView = ({
                   : "none",
             }}
           />
-          <div className="absolute bottom-2 left-2 right-2 bg-black/70 text-white px-2 py-1 rounded text-xs flex justify-between items-center pointer-events-none">
-            <span className="truncate">{img.name}</span>
-            <span className="ml-2 font-semibold">{(img.annotations.boxes || []).length} boxes</span>
-          </div>
         </div>
       ))}
-    </div>
+    </>
   );
 };
