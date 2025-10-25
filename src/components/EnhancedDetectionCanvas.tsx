@@ -417,8 +417,11 @@ export const EnhancedDetectionCanvas = ({
 
   const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
     e.preventDefault();
-    const delta = e.deltaY > 0 ? 0.9 : 1.1;
-    setZoom((prev) => Math.max(0.5, Math.min(5, prev * delta)));
+    const delta = e.deltaY > 0 ? -0.1 : 0.1;
+    setZoom((prev) => {
+      const newZoom = Math.max(0.25, Math.min(5, prev + delta));
+      return newZoom;
+    });
   };
 
   const selectedBox = boxes.find((b) => b.id === selectedBoxId);
@@ -430,7 +433,13 @@ export const EnhancedDetectionCanvas = ({
           <Button 
             size="sm" 
             variant="secondary" 
-            onClick={() => setZoom((z) => Math.min(5, z * 1.2))}
+            onClick={() => {
+              setZoom((z) => {
+                const newZoom = Math.min(5, z + 0.25);
+                toast.success(`Zoom: ${Math.round(newZoom * 100)}%`);
+                return newZoom;
+              });
+            }}
             className="h-8"
           >
             <ZoomIn className="w-4 h-4" />
@@ -438,7 +447,13 @@ export const EnhancedDetectionCanvas = ({
           <Button 
             size="sm" 
             variant="secondary" 
-            onClick={() => setZoom((z) => Math.max(0.5, z / 1.2))}
+            onClick={() => {
+              setZoom((z) => {
+                const newZoom = Math.max(0.25, z - 0.25);
+                toast.success(`Zoom: ${Math.round(newZoom * 100)}%`);
+                return newZoom;
+              });
+            }}
             className="h-8"
           >
             <ZoomOut className="w-4 h-4" />
@@ -446,7 +461,11 @@ export const EnhancedDetectionCanvas = ({
           <Button 
             size="sm" 
             variant="secondary" 
-            onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }); }}
+            onClick={() => { 
+              setZoom(1); 
+              setPan({ x: 0, y: 0 }); 
+              toast.success("Zoom reset to 100%");
+            }}
             className="h-8"
           >
             <RotateCcw className="w-4 h-4 mr-1" />

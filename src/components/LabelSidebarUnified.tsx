@@ -70,7 +70,8 @@ export const LabelSidebarUnified = ({
           </h3>
           <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-              <Button size="sm" className="h-8 bg-primary text-primary-foreground">
+              <Button size="sm" className="h-8 gap-1.5 bg-gradient-hero text-primary-foreground shadow-md hover:shadow-lg transition-all glow-primary">
+                <div className="w-3 h-3 rounded-full border-2 border-white" style={{ backgroundColor: selectedColor }} />
                 <Plus className="w-4 h-4" />
               </Button>
             </DialogTrigger>

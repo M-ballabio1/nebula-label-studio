@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { SegmentationPolygon, SegmentationPoint, Label } from "@/types/annotation";
 import { ZoomIn, ZoomOut, Trash2, CheckCircle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface EnhancedSegmentationCanvasProps {
   imageUrl: string;
@@ -255,8 +256,21 @@ export const EnhancedSegmentationCanvas = ({
     setCurrentPoints([]);
   };
 
-  const handleZoomIn = () => setZoom(Math.min(zoom + 0.5, 5));
-  const handleZoomOut = () => setZoom(Math.max(zoom - 0.5, 0.5));
+  const handleZoomIn = () => {
+    setZoom((prev) => {
+      const newZoom = Math.min(prev + 0.25, 5);
+      toast.success(`Zoom: ${Math.round(newZoom * 100)}%`);
+      return newZoom;
+    });
+  };
+  
+  const handleZoomOut = () => {
+    setZoom((prev) => {
+      const newZoom = Math.max(prev - 0.25, 0.25);
+      toast.success(`Zoom: ${Math.round(newZoom * 100)}%`);
+      return newZoom;
+    });
+  };
 
   return (
     <div className="w-full h-full flex flex-col bg-background relative">
