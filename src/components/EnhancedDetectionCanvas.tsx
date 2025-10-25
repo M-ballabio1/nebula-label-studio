@@ -118,13 +118,13 @@ export const EnhancedDetectionCanvas = ({
     ctx.scale(zoom, zoom);
 
     // Calculate image dimensions to fit canvas while maintaining aspect ratio
-    const maxWidth = canvas.width / zoom * 0.9;
-    const maxHeight = canvas.height / zoom * 0.9;
-    const scale = Math.min(maxWidth / img.width, maxHeight / img.height);
+    const baseMaxWidth = canvas.width * 0.9;
+    const baseMaxHeight = canvas.height * 0.9;
+    const scale = Math.min(baseMaxWidth / img.width, baseMaxHeight / img.height);
     const scaledWidth = img.width * scale;
     const scaledHeight = img.height * scale;
-    const offsetX = (canvas.width / zoom - scaledWidth) / 2;
-    const offsetY = (canvas.height / zoom - scaledHeight) / 2;
+    const offsetX = (canvas.width - scaledWidth) / 2;
+    const offsetY = (canvas.height - scaledHeight) / 2;
 
     // Store image bounds in ref for immediate access
     imageBoundsRef.current = {

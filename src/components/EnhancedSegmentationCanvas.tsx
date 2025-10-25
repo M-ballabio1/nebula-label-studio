@@ -63,13 +63,13 @@ export const EnhancedSegmentationCanvas = ({
     img.src = imageUrl;
     img.onload = () => {
       // Calculate scale to fit image in viewport similar to detection canvas
-      const maxWidth = (canvas.width / zoom) * 0.95;
-      const maxHeight = (canvas.height / zoom) * 0.95;
-      const scale = Math.min(maxWidth / img.width, maxHeight / img.height);
+      const baseMaxWidth = canvas.width * 0.95;
+      const baseMaxHeight = canvas.height * 0.95;
+      const scale = Math.min(baseMaxWidth / img.width, baseMaxHeight / img.height);
       const scaledWidth = img.width * scale;
       const scaledHeight = img.height * scale;
-      const offsetX = ((canvas.width / zoom) - scaledWidth) / 2;
-      const offsetY = ((canvas.height / zoom) - scaledHeight) / 2;
+      const offsetX = (canvas.width - scaledWidth) / 2;
+      const offsetY = (canvas.height - scaledHeight) / 2;
 
       if (onImageDimensions) {
         onImageDimensions({
