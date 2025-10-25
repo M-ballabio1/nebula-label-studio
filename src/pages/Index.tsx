@@ -28,7 +28,6 @@ import {
   AudioSegment,
   TextAnnotation,
 } from "@/types/annotation";
-import { VideoFrame } from "@/types/video";
 import { toast } from "sonner";
 
 // Sample data
@@ -183,7 +182,6 @@ const SAMPLE_IMAGES: ImageItem[] = [
 ];
 
 const SAMPLE_AUDIO_URL = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
-const SAMPLE_VIDEO_URL = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
 const SAMPLE_TEXT = "Natural Language Processing (NLP) is a subfield of artificial intelligence that focuses on the interaction between computers and humans through natural language. The ultimate objective of NLP is to read, decipher, understand, and make sense of human languages in a manner that is valuable. Most NLP techniques rely on machine learning to derive meaning from human languages. NLP is used to apply algorithms to identify and extract the natural language rules such that unstructured language data is converted into a form that computers can understand.";
 
 type GridMode = "single" | "grid4" | "grid6" | "grid8";
@@ -209,8 +207,6 @@ const Index = () => {
     labelIds: [],
   });
   const [gridMode, setGridMode] = useState<GridMode>("single");
-  const [videoFrames, setVideoFrames] = useState<VideoFrame[]>([]);
-  const [selectedFrameId, setSelectedFrameId] = useState<string | null>(null);
 
   const selectedImage = images.find((img) => img.id === selectedImageId);
 
@@ -436,24 +432,6 @@ const Index = () => {
     toast.success("Text annotation deleted");
   };
 
-  const handleExtractVideoFrames = () => {
-    // Simulated frame extraction - in a real app, this would use canvas to extract frames from video
-    const mockFrames: VideoFrame[] = Array.from({ length: 24 }, (_, i) => ({
-      id: `frame-${i}`,
-      frameNumber: i + 1,
-      timestamp: i * 0.5,
-      imageUrl: images[i % images.length]?.url || images[0]?.url,
-      thumbnailUrl: images[i % images.length]?.thumbnailUrl || images[0]?.thumbnailUrl,
-    }));
-    setVideoFrames(mockFrames);
-    toast.success(`Extracted ${mockFrames.length} frames`);
-  };
-
-  const handleFrameSelect = (frameId: string) => {
-    setSelectedFrameId(frameId);
-    toast.success(`Frame selected`);
-  };
-
   const getGridClass = () => {
     switch (gridMode) {
       case "grid4":
@@ -478,17 +456,7 @@ const Index = () => {
     <div className="h-screen flex flex-col bg-background">
       <Header mode={mode} images={images} labels={labels} />
       <div className="flex-1 flex overflow-hidden">
-        {mode === "video" ? (
-          <div className="w-64">
-            <LabelSidebar
-              labels={labels}
-              selectedLabelId={selectedLabelId}
-              onSelectLabel={setSelectedLabelId}
-              onAddLabel={handleAddLabel}
-              onDeleteLabel={handleDeleteLabel}
-            />
-          </div>
-        ) : mode === "audio" ? (
+        {mode === "audio" ? (
           <AudioSidebar
             labels={labels}
             selectedLabelId={selectedLabelId}
@@ -584,7 +552,7 @@ const Index = () => {
         <div className="flex-1 flex flex-col overflow-hidden">
           <AnnotationToolbar mode={mode} onModeChange={setMode} />
           
-          {(mode === "detection" || mode === "segmentation" || mode === "classification" || mode === "video" || mode === "audio" || mode === "text") && (
+          {(mode === "detection" || mode === "segmentation" || mode === "classification" || mode === "audio" || mode === "text") && (
             <ImageFilterBar
               labels={labels}
               selectedFilters={filters}
@@ -653,15 +621,6 @@ const Index = () => {
                     onAddPolygon={handleAddPolygon}
                     onDeletePolygon={handleDeletePolygon}
                     onImageDimensions={setSegmentationImageDimensions}
-                  />
-                )}
-                {mode === "video" && (
-                  <VideoAnnotationCanvas
-                    videoUrl={SAMPLE_VIDEO_URL}
-                    frames={videoFrames}
-                    currentFrameId={selectedFrameId}
-                    onFrameSelect={handleFrameSelect}
-                    onExtractFrames={handleExtractVideoFrames}
                   />
                 )}
                 {mode === "audio" && (
@@ -766,6 +725,66 @@ const Index = () => {
                           if (selectedImageId === img.id) setHoveredBox(box);
                         }}
                       />
+                    )}
+                    {mode === "segmentation" && (
+                      <>
+                        <div 
+                          onClick={() => setSelectedImageId(img.id)}
+                          className="cursor-pointer relative h-full"
+                        >
+                          <EnhancedSegmentationCanvas
+                            imageUrl={img.url}
+                            labels={labels}
+                            selectedLabelId={selectedLabelId}
+                            polygons={img.annotations.polygons || []}
+                            onAddPolygon={(polygon) => {
+                              const newPolygon: SegmentationPolygon = {
+                                ...polygon,
+                                id: `polygon-${Date.now()}`,
+                              };
+                              setImages(
+                                images.map((image) =>
+                                  image.id === img.id
+                                    ? {
+                                        ...image,
+                                        annotations: {
+                                          ...image.annotations,
+                                          polygons: [...(image.annotations.polygons || []), newPolygon],
+                                        },
+                                      }
+                                    : image
+                                )
+                              );
+                            }}
+                            onDeletePolygon={(id) => {
+                              setImages(
+                                images.map((image) =>
+                                  image.id === img.id
+                                    ? {
+                                        ...image,
+                                        annotations: {
+                                          ...image.annotations,
+                                          polygons: (image.annotations.polygons || []).filter((p) => p.id !== id),
+                                        },
+                                      }
+                                    : image
+                                )
+                              );
+                            }}
+                            onImageDimensions={(dims) => {
+                              if (selectedImageId === img.id) {
+                                setSegmentationImageDimensions(dims);
+                              }
+                            }}
+                          />
+                        </div>
+                        <div className="absolute bottom-2 left-2 right-2 bg-card/90 backdrop-blur-sm px-2 py-1 rounded text-xs pointer-events-none">
+                          <div className="font-medium truncate">{img.name}</div>
+                          <div className="text-muted-foreground">
+                            {img.annotations.polygons?.length || 0} polygons
+                          </div>
+                        </div>
+                      </>
                     )}
                     {mode === "classification" && (
                       <>

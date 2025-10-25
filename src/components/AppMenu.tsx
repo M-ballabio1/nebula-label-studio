@@ -1,4 +1,4 @@
-import { Settings, Download, HelpCircle, LogOut, FileJson, FileText, File } from "lucide-react";
+import { Settings, Download, HelpCircle, LogOut, FileJson, FileText, File, FileArchive, Image } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -25,28 +25,45 @@ export const AppMenu = ({ mode, images, labels }: AppMenuProps) => {
     toast.info("Settings panel coming soon");
   };
 
-  const handleExportCOCO = () => {
+  const handleExportCOCO = async (includeImages: boolean = false) => {
     const cocoData = exportCOCO(images, labels);
-    downloadFile(cocoData, "annotations_coco.json", "application/json");
-    toast.success("Exported in COCO format");
+    if (includeImages) {
+      const files: Record<string, string> = {
+        "annotations.json": cocoData,
+      };
+      toast.promise(downloadMultipleFiles(files, "coco_dataset.zip"), {
+        loading: "Preparing COCO export...",
+        success: "Exported COCO format with images",
+        error: "Failed to export",
+      });
+    } else {
+      downloadFile(cocoData, "annotations_coco.json", "application/json");
+      toast.success("Exported COCO annotations");
+    }
   };
 
-  const handleExportYOLO = () => {
+  const handleExportYOLO = async (includeImages: boolean = false) => {
     const yoloFiles = exportYOLO(images, labels);
-    downloadMultipleFiles(yoloFiles, "annotations_yolo.zip");
-    toast.success("Exported in YOLO format");
+    toast.promise(downloadMultipleFiles(yoloFiles, "yolo_dataset.zip"), {
+      loading: "Preparing YOLO export...",
+      success: "Exported YOLO format",
+      error: "Failed to export",
+    });
   };
 
-  const handleExportDarknet = () => {
+  const handleExportDarknet = async (includeImages: boolean = false) => {
     const darknetFiles = exportDarknet(images, labels);
-    downloadMultipleFiles(darknetFiles, "annotations_darknet.zip");
-    toast.success("Exported in Darknet format");
+    toast.promise(downloadMultipleFiles(darknetFiles, "darknet_dataset.zip"), {
+      loading: "Preparing Darknet export...",
+      success: "Exported Darknet format",
+      error: "Failed to export",
+    });
   };
 
   const handleExportCSV = () => {
     const csvData = exportCSV(images, labels, mode);
     downloadFile(csvData, `annotations_${mode}.csv`, "text/csv");
-    toast.success("Exported in CSV format");
+    toast.success("Exported CSV format");
   };
 
   const handleHelp = () => {
@@ -58,12 +75,26 @@ export const AppMenu = ({ mode, images, labels }: AppMenuProps) => {
   };
 
   const getExportFormats = () => {
-    const formats = [
+    type FormatItem = {
+      label: string;
+      icon: any;
+      onClick: () => void;
+      available: string[];
+      hasSubMenu: boolean;
+      subItems?: Array<{
+        label: string;
+        icon: any;
+        onClick: () => void;
+      }>;
+    };
+
+    const formats: FormatItem[] = [
       {
         label: "CSV Format",
         icon: FileText,
         onClick: handleExportCSV,
         available: ["detection", "segmentation", "classification"],
+        hasSubMenu: false,
       },
     ];
 
@@ -72,20 +103,35 @@ export const AppMenu = ({ mode, images, labels }: AppMenuProps) => {
         {
           label: "COCO Format",
           icon: FileJson,
-          onClick: handleExportCOCO,
+          onClick: () => {},
           available: ["detection", "segmentation"],
+          hasSubMenu: true,
+          subItems: [
+            {
+              label: "Annotations Only",
+              icon: FileJson,
+              onClick: () => handleExportCOCO(false),
+            },
+            {
+              label: "With Images (ZIP)",
+              icon: FileArchive,
+              onClick: () => handleExportCOCO(true),
+            },
+          ],
         },
         {
-          label: "YOLO Format",
-          icon: File,
-          onClick: handleExportYOLO,
+          label: "YOLO Format (ZIP)",
+          icon: FileArchive,
+          onClick: () => handleExportYOLO(false),
           available: ["detection", "segmentation"],
+          hasSubMenu: false,
         },
         {
-          label: "Darknet Format",
-          icon: File,
-          onClick: handleExportDarknet,
+          label: "Darknet Format (ZIP)",
+          icon: FileArchive,
+          onClick: () => handleExportDarknet(false),
           available: ["detection", "segmentation"],
+          hasSubMenu: false,
         }
       );
     }
@@ -114,12 +160,29 @@ export const AppMenu = ({ mode, images, labels }: AppMenuProps) => {
             <Download className="w-4 h-4 mr-2" />
             Export Annotations
           </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent className="w-48">
+          <DropdownMenuSubContent className="w-56">
             {getExportFormats().map((format) => (
-              <DropdownMenuItem key={format.label} onClick={format.onClick}>
-                <format.icon className="w-4 h-4 mr-2" />
-                {format.label}
-              </DropdownMenuItem>
+              format.hasSubMenu && format.subItems ? (
+                <DropdownMenuSub key={format.label}>
+                  <DropdownMenuSubTrigger>
+                    <format.icon className="w-4 h-4 mr-2" />
+                    {format.label}
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="w-56">
+                    {format.subItems.map((subItem) => (
+                      <DropdownMenuItem key={subItem.label} onClick={subItem.onClick}>
+                        <subItem.icon className="w-4 h-4 mr-2" />
+                        {subItem.label}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+              ) : (
+                <DropdownMenuItem key={format.label} onClick={format.onClick}>
+                  <format.icon className="w-4 h-4 mr-2" />
+                  {format.label}
+                </DropdownMenuItem>
+              )
             ))}
           </DropdownMenuSubContent>
         </DropdownMenuSub>
