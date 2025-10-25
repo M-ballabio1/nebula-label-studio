@@ -24,10 +24,6 @@ const Index = () => {
     setImages,
     selectedImageId,
     setSelectedImageId,
-    audioSegments,
-    setAudioSegments,
-    textAnnotations,
-    setTextAnnotations,
     imageDimensions,
     setImageDimensions,
     normalizedDimensions,
@@ -63,6 +59,8 @@ const Index = () => {
     handleDeleteAudioSegment,
     handleAddTextAnnotation,
     handleDeleteTextAnnotation,
+    audioSegments,
+    textAnnotations,
   } = useAnnotationHandlers(
     images,
     setImages,
@@ -70,11 +68,7 @@ const Index = () => {
     labels,
     setLabels,
     selectedLabelId,
-    setSelectedLabelId,
-    audioSegments,
-    setAudioSegments,
-    textAnnotations,
-    setTextAnnotations
+    setSelectedLabelId
   );
 
   const {
