@@ -25,14 +25,6 @@ export default {
           glow: "hsl(var(--primary-glow))",
           dark: "hsl(var(--primary-dark))",
         },
-        "accent-logo": {
-          DEFAULT: "hsl(var(--accent-logo))",
-          foreground: "hsl(var(--accent-logo-foreground))",
-        },
-        "accent-action": {
-          DEFAULT: "hsl(var(--accent-action))",
-          foreground: "hsl(var(--accent-action-foreground))",
-        },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
