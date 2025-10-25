@@ -14,7 +14,7 @@ import { useImageFilters } from "@/hooks/useImageFilters";
 import { useImageNavigation } from "@/hooks/useImageNavigation";
 import { useAnnotationHandlers } from "@/hooks/useAnnotationHandlers";
 import { useGridAnnotationHandlers } from "@/hooks/useGridAnnotationHandlers";
-import { useHotkeys } from "@/hooks/useHotkeys";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { toast } from "sonner";
 
 const Index = () => {
@@ -89,7 +89,17 @@ const Index = () => {
     handleGridToggleTag,
   } = useGridAnnotationHandlers(images, setImages, setSelectedImageId);
 
-  useHotkeys(labels, setSelectedLabelId);
+  const handleFirstImage = () => {
+    if (filteredImages.length > 0) {
+      setSelectedImageId(filteredImages[0].id);
+    }
+  };
+
+  const handleLastImage = () => {
+    if (filteredImages.length > 0) {
+      setSelectedImageId(filteredImages[filteredImages.length - 1].id);
+    }
+  };
 
   const handleSave = () => {
     setShowSaveAnimation(true);
@@ -113,6 +123,17 @@ const Index = () => {
     setZoom(1);
     toast.info("Zoom reset to 100%");
   };
+
+  useKeyboardShortcuts(labels, setSelectedLabelId, {
+    onNextImage: handleNextImage,
+    onPreviousImage: handlePreviousImage,
+    onFirstImage: handleFirstImage,
+    onLastImage: handleLastImage,
+    onSave: handleSave,
+    onZoomIn: handleZoomIn,
+    onZoomOut: handleZoomOut,
+    onZoomReset: handleZoomReset,
+  });
 
   return (
     <div className="h-screen flex flex-col bg-background">

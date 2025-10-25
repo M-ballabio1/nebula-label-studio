@@ -13,6 +13,8 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { DEFAULT_SHORTCUTS, getShortcutString } from "@/config/shortcuts";
+import { Badge } from "@/components/ui/badge";
 
 interface SettingsModalProps {
   open: boolean;
@@ -198,76 +200,35 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
             </TabsContent>
 
             <TabsContent value="shortcuts" className="space-y-4 pr-4">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between py-2">
-                  <div>
-                    <p className="font-medium">Next Image</p>
-                    <p className="text-sm text-muted-foreground">Navigate to next image</p>
+              <div className="space-y-4">
+                {['navigation', 'annotation', 'editing', 'view'].map((category) => (
+                  <div key={category} className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="capitalize">
+                        {category}
+                      </Badge>
+                    </div>
+                    
+                    {DEFAULT_SHORTCUTS.filter((s) => s.category === category).map(
+                      (shortcut, idx, arr) => (
+                        <div key={shortcut.id}>
+                          <div className="flex items-center justify-between py-2">
+                            <div className="flex-1">
+                              <p className="font-medium">{shortcut.name}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {shortcut.description}
+                              </p>
+                            </div>
+                            <kbd className="px-2 py-1 text-xs font-semibold border rounded bg-muted whitespace-nowrap">
+                              {getShortcutString(shortcut)}
+                            </kbd>
+                          </div>
+                          {idx < arr.length - 1 && <Separator />}
+                        </div>
+                      )
+                    )}
                   </div>
-                  <kbd className="px-2 py-1 text-xs font-semibold border rounded bg-muted">
-                    →
-                  </kbd>
-                </div>
-
-                <Separator />
-
-                <div className="flex items-center justify-between py-2">
-                  <div>
-                    <p className="font-medium">Previous Image</p>
-                    <p className="text-sm text-muted-foreground">Navigate to previous image</p>
-                  </div>
-                  <kbd className="px-2 py-1 text-xs font-semibold border rounded bg-muted">
-                    ←
-                  </kbd>
-                </div>
-
-                <Separator />
-
-                <div className="flex items-center justify-between py-2">
-                  <div>
-                    <p className="font-medium">Select Label 1-9</p>
-                    <p className="text-sm text-muted-foreground">Quickly select labels</p>
-                  </div>
-                  <kbd className="px-2 py-1 text-xs font-semibold border rounded bg-muted">
-                    1-9
-                  </kbd>
-                </div>
-
-                <Separator />
-
-                <div className="flex items-center justify-between py-2">
-                  <div>
-                    <p className="font-medium">Delete Annotation</p>
-                    <p className="text-sm text-muted-foreground">Remove selected annotation</p>
-                  </div>
-                  <kbd className="px-2 py-1 text-xs font-semibold border rounded bg-muted">
-                    Del
-                  </kbd>
-                </div>
-
-                <Separator />
-
-                <div className="flex items-center justify-between py-2">
-                  <div>
-                    <p className="font-medium">Undo</p>
-                    <p className="text-sm text-muted-foreground">Undo last action</p>
-                  </div>
-                  <kbd className="px-2 py-1 text-xs font-semibold border rounded bg-muted">
-                    Ctrl+Z
-                  </kbd>
-                </div>
-
-                <Separator />
-
-                <div className="flex items-center justify-between py-2">
-                  <div>
-                    <p className="font-medium">Save</p>
-                    <p className="text-sm text-muted-foreground">Save current annotations</p>
-                  </div>
-                  <kbd className="px-2 py-1 text-xs font-semibold border rounded bg-muted">
-                    Ctrl+S
-                  </kbd>
-                </div>
+                ))}
               </div>
             </TabsContent>
           </ScrollArea>
