@@ -12,6 +12,11 @@ interface EnhancedSegmentationCanvasProps {
   onAddPolygon: (polygon: Omit<SegmentationPolygon, "id">) => void;
   onDeletePolygon: (id: string) => void;
   onImageDimensions?: (dimensions: { original: { width: number; height: number }; normalized: { width: number; height: number } }) => void;
+  activeTool?: "select" | "pan" | "draw" | "erase" | "measure";
+  imageTransform?: { rotation: number; flipH: boolean; flipV: boolean };
+  imageFilters?: { brightness: number; contrast: number; saturation: number };
+  showAnnotations?: boolean;
+  lockAnnotations?: boolean;
 }
 
 export const EnhancedSegmentationCanvas = ({
@@ -22,6 +27,11 @@ export const EnhancedSegmentationCanvas = ({
   onAddPolygon,
   onDeletePolygon,
   onImageDimensions,
+  activeTool = "draw",
+  imageTransform = { rotation: 0, flipH: false, flipV: false },
+  imageFilters = { brightness: 100, contrast: 100, saturation: 100 },
+  showAnnotations = true,
+  lockAnnotations = false,
 }: EnhancedSegmentationCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -93,13 +103,33 @@ export const EnhancedSegmentationCanvas = ({
       ctx.drawImage(img, offsetX, offsetY, scaledWidth, scaledHeight);
       ctx.restore();
 
+      // Apply transformations and filters
+      ctx.save();
+      ctx.translate(offsetX + scaledWidth / 2, offsetY + scaledHeight / 2);
+      
+      // Apply rotation
+      ctx.rotate((imageTransform.rotation * Math.PI) / 180);
+      
+      // Apply flip
+      const scaleX = imageTransform.flipH ? -1 : 1;
+      const scaleY = imageTransform.flipV ? -1 : 1;
+      ctx.scale(scaleX, scaleY);
+      
+      // Redraw image with filters
+      ctx.filter = `brightness(${imageFilters.brightness}%) contrast(${imageFilters.contrast}%) saturate(${imageFilters.saturation}%)`;
+      ctx.drawImage(img, -scaledWidth / 2, -scaledHeight / 2, scaledWidth, scaledHeight);
+      ctx.filter = 'none';
+      
+      ctx.restore();
+
       // Draw polygons after restoring context so they scale with zoom
       ctx.save();
       ctx.translate(pan.x, pan.y);
       ctx.scale(zoom, zoom);
 
-      // Draw existing polygons - denormalize coordinates for display
-      polygons.forEach((polygon) => {
+      // Draw existing polygons only if showAnnotations is true
+      if (showAnnotations) {
+        polygons.forEach((polygon) => {
         const label = labels.find((l) => l.id === polygon.labelId);
         if (!label || polygon.points.length < 2) return;
 
@@ -142,6 +172,7 @@ export const EnhancedSegmentationCanvas = ({
           ctx.stroke();
         });
       });
+      }
 
       // Draw current polygon being created
       if (currentPoints.length > 0 && selectedLabelId) {
@@ -212,11 +243,13 @@ export const EnhancedSegmentationCanvas = ({
   };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (e.button === 1 || (e.button === 0 && e.shiftKey)) {
+    if (lockAnnotations) return;
+    
+    if (activeTool === "pan" || e.button === 1 || (e.button === 0 && e.shiftKey)) {
       setIsPanning(true);
       setLastPanPos({ x: e.clientX, y: e.clientY });
       e.preventDefault();
-    } else if (e.button === 0 && selectedLabelId && !isPanning) {
+    } else if (e.button === 0 && activeTool === "draw" && selectedLabelId && !isPanning) {
       setIsDrawing(true);
       const coords = getCanvasCoordinates(e);
       setCurrentPoints([coords]);
@@ -346,7 +379,17 @@ export const EnhancedSegmentationCanvas = ({
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
-          className={`w-full h-full ${isPanning ? "cursor-grabbing" : isDrawing ? "cursor-crosshair" : "cursor-crosshair"}`}
+          className={`w-full h-full ${
+            lockAnnotations 
+              ? "cursor-not-allowed" 
+              : isPanning || activeTool === "pan" 
+                ? "cursor-grabbing" 
+                : isDrawing 
+                  ? "cursor-crosshair" 
+                  : activeTool === "select" 
+                    ? "cursor-pointer" 
+                    : "cursor-crosshair"
+          }`}
           style={{ display: 'block' }}
         />
       </div>

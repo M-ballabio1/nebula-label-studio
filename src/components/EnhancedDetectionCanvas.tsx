@@ -15,6 +15,11 @@ interface EnhancedDetectionCanvasProps {
   onImageLoad?: (dimensions: { width: number; height: number }) => void;
   onBoxSelect?: (box: BoundingBox | null) => void;
   onBoxHover?: (box: BoundingBox | null) => void;
+  activeTool?: "select" | "pan" | "draw" | "erase" | "measure";
+  imageTransform?: { rotation: number; flipH: boolean; flipV: boolean };
+  imageFilters?: { brightness: number; contrast: number; saturation: number };
+  showAnnotations?: boolean;
+  lockAnnotations?: boolean;
 }
 
 type InteractionMode = "draw" | "select" | "move" | "resize";
@@ -31,6 +36,11 @@ export const EnhancedDetectionCanvas = ({
   onImageLoad,
   onBoxSelect,
   onBoxHover,
+  activeTool = "draw",
+  imageTransform = { rotation: 0, flipH: false, flipV: false },
+  imageFilters = { brightness: 100, contrast: 100, saturation: 100 },
+  showAnnotations = true,
+  lockAnnotations = false,
 }: EnhancedDetectionCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -136,11 +146,28 @@ export const EnhancedDetectionCanvas = ({
       height: scaledHeight,
     };
 
-    // Draw image
-    ctx.drawImage(img, offsetX, offsetY, scaledWidth, scaledHeight);
+    // Apply transformations and filters
+    ctx.save();
+    ctx.translate(offsetX + scaledWidth / 2, offsetY + scaledHeight / 2);
+    
+    // Apply rotation
+    ctx.rotate((imageTransform.rotation * Math.PI) / 180);
+    
+    // Apply flip
+    const scaleX = imageTransform.flipH ? -1 : 1;
+    const scaleY = imageTransform.flipV ? -1 : 1;
+    ctx.scale(scaleX, scaleY);
+    
+    // Draw image with filters
+    ctx.filter = `brightness(${imageFilters.brightness}%) contrast(${imageFilters.contrast}%) saturate(${imageFilters.saturation}%)`;
+    ctx.drawImage(img, -scaledWidth / 2, -scaledHeight / 2, scaledWidth, scaledHeight);
+    ctx.filter = 'none';
+    
+    ctx.restore();
 
-    // Draw existing boxes - denormalize coordinates for display
-    boxes.forEach((box) => {
+    // Draw existing boxes only if showAnnotations is true
+    if (showAnnotations) {
+      boxes.forEach((box) => {
       const label = labels.find((l) => l.id === box.labelId);
       if (!label) return;
 
@@ -190,6 +217,7 @@ export const EnhancedDetectionCanvas = ({
       ctx.fillStyle = "#fff";
       ctx.fillText(labelText, displayX + padding, displayY - padding);
     });
+    }
 
     // Draw current box being drawn (in display coordinates)
     if (currentBox && selectedLabelId) {
@@ -249,7 +277,10 @@ export const EnhancedDetectionCanvas = ({
   };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (e.button === 1 || (e.button === 0 && e.shiftKey)) {
+    if (lockAnnotations) return;
+    
+    // Pan mode or middle mouse button
+    if (activeTool === "pan" || e.button === 1 || (e.button === 0 && e.shiftKey)) {
       setIsPanning(true);
       setPanStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
       return;
@@ -274,7 +305,7 @@ export const EnhancedDetectionCanvas = ({
 
     // Check if clicking on a box (denormalize for hit detection)
     const imageBounds = imageBoundsRef.current;
-    const clickedBox = imageBounds ? boxes.find((box) => {
+    const clickedBox = imageBounds && (activeTool === "select" || activeTool === "draw") ? boxes.find((box) => {
       const displayX = imageBounds.x + box.x * imageBounds.width;
       const displayY = imageBounds.y + box.y * imageBounds.height;
       const displayWidth = box.width * imageBounds.width;
@@ -294,8 +325,8 @@ export const EnhancedDetectionCanvas = ({
       return;
     }
 
-    // Start drawing new box
-    if (selectedLabelId) {
+    // Start drawing new box only if in draw mode
+    if (activeTool === "draw" && selectedLabelId) {
       setIsDrawing(true);
       setStartPoint(coords);
       setSelectedBoxId(null);

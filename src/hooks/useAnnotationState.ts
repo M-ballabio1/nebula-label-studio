@@ -4,6 +4,7 @@ import {
   BoundingBox,
 } from "@/types/annotation";
 import { GridMode } from "@/types/gridMode";
+import { CanvasTool } from "@/contexts/AnnotationContext";
 import { useImages } from "./useImages";
 import { useLabels } from "./useLabels";
 
@@ -24,6 +25,19 @@ export const useAnnotationState = () => {
     labelIds: [],
   });
   const [gridMode, setGridMode] = useState<GridMode>("single");
+  const [canvasTool, setCanvasTool] = useState<CanvasTool>("draw");
+  const [imageTransform, setImageTransform] = useState({
+    rotation: 0,
+    flipH: false,
+    flipV: false,
+  });
+  const [imageFilters, setImageFilters] = useState({
+    brightness: 100,
+    contrast: 100,
+    saturation: 100,
+  });
+  const [showAnnotations, setShowAnnotations] = useState(true);
+  const [lockAnnotations, setLockAnnotations] = useState(false);
 
   const { images, setImages, loading: imagesLoading } = useImages();
   const { labels, setLabels, loading: labelsLoading } = useLabels();
@@ -71,5 +85,15 @@ export const useAnnotationState = () => {
     gridMode,
     setGridMode,
     selectedImage,
+    canvasTool,
+    setCanvasTool,
+    imageTransform,
+    setImageTransform,
+    imageFilters,
+    setImageFilters,
+    showAnnotations,
+    setShowAnnotations,
+    lockAnnotations,
+    setLockAnnotations,
   };
 };

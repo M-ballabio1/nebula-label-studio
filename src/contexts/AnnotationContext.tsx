@@ -2,6 +2,20 @@ import { createContext, useContext, ReactNode } from "react";
 import { AnnotationMode, Label, ImageItem, BoundingBox } from "@/types/annotation";
 import { GridMode } from "@/types/gridMode";
 
+export type CanvasTool = "select" | "pan" | "draw" | "erase" | "measure";
+
+interface ImageTransform {
+  rotation: number;
+  flipH: boolean;
+  flipV: boolean;
+}
+
+interface ImageFilters {
+  brightness: number;
+  contrast: number;
+  saturation: number;
+}
+
 interface AnnotationContextType {
   // Mode & State
   mode: AnnotationMode;
@@ -35,6 +49,18 @@ interface AnnotationContextType {
   // Filters
   filters: { annotated: boolean | null; labelIds: string[] };
   setFilters: (filters: { annotated: boolean | null; labelIds: string[] }) => void;
+  
+  // Tools & Transformations
+  canvasTool: CanvasTool;
+  setCanvasTool: (tool: CanvasTool) => void;
+  imageTransform: ImageTransform;
+  setImageTransform: (transform: ImageTransform | ((prev: ImageTransform) => ImageTransform)) => void;
+  imageFilters: ImageFilters;
+  setImageFilters: (filters: ImageFilters | ((prev: ImageFilters) => ImageFilters)) => void;
+  showAnnotations: boolean;
+  setShowAnnotations: (show: boolean) => void;
+  lockAnnotations: boolean;
+  setLockAnnotations: (lock: boolean) => void;
 }
 
 const AnnotationContext = createContext<AnnotationContextType | undefined>(undefined);

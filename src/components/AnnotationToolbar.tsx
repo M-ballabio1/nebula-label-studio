@@ -1,12 +1,9 @@
-import { useState } from "react";
 import {
   MousePointer2,
   Hand,
-  Square,
   Pencil,
-  Circle,
+  Eraser,
   Ruler,
-  Move,
   RotateCw,
   FlipHorizontal,
   FlipVertical,
@@ -22,7 +19,6 @@ import {
   EyeOff,
   Lock,
   Unlock,
-  Eraser,
   Copy,
   Scissors,
 } from "lucide-react";
@@ -36,12 +32,19 @@ import {
 } from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-
-type Tool = "select" | "pan" | "draw" | "erase" | "measure";
+import { CanvasTool } from "@/contexts/AnnotationContext";
 
 interface AnnotationToolbarProps {
-  activeTool?: Tool;
-  onToolChange?: (tool: Tool) => void;
+  activeTool?: CanvasTool;
+  onToolChange?: (tool: CanvasTool) => void;
+  imageTransform?: { rotation: number; flipH: boolean; flipV: boolean };
+  onTransformChange?: (transform: { rotation: number; flipH: boolean; flipV: boolean }) => void;
+  imageFilters?: { brightness: number; contrast: number; saturation: number };
+  onFiltersChange?: (filters: { brightness: number; contrast: number; saturation: number }) => void;
+  showAnnotations?: boolean;
+  onShowAnnotationsChange?: (show: boolean) => void;
+  lockAnnotations?: boolean;
+  onLockAnnotationsChange?: (lock: boolean) => void;
   onUndo?: () => void;
   onRedo?: () => void;
   onSave?: () => void;
@@ -53,6 +56,14 @@ interface AnnotationToolbarProps {
 export const AnnotationToolbar = ({
   activeTool = "draw",
   onToolChange,
+  imageTransform = { rotation: 0, flipH: false, flipV: false },
+  onTransformChange,
+  imageFilters = { brightness: 100, contrast: 100, saturation: 100 },
+  onFiltersChange,
+  showAnnotations = true,
+  onShowAnnotationsChange,
+  lockAnnotations = false,
+  onLockAnnotationsChange,
   onUndo,
   onRedo,
   onSave,
@@ -60,44 +71,42 @@ export const AnnotationToolbar = ({
   canUndo = false,
   canRedo = false,
 }: AnnotationToolbarProps) => {
-  const [brightness, setBrightness] = useState(100);
-  const [contrast, setContrast] = useState(100);
-  const [saturation, setSaturation] = useState(100);
-  const [showAnnotations, setShowAnnotations] = useState(true);
-  const [lockAnnotations, setLockAnnotations] = useState(false);
-
   const tools = [
-    { id: "select" as Tool, icon: MousePointer2, label: "Select Tool (V)", hotkey: "V" },
-    { id: "pan" as Tool, icon: Hand, label: "Pan Tool (H)", hotkey: "H" },
-    { id: "draw" as Tool, icon: Pencil, label: "Draw (D)", hotkey: "D" },
-    { id: "erase" as Tool, icon: Eraser, label: "Erase (E)", hotkey: "E" },
-    { id: "measure" as Tool, icon: Ruler, label: "Measure (M)", hotkey: "M" },
+    { id: "select" as CanvasTool, icon: MousePointer2, label: "Select Tool (V)", hotkey: "V" },
+    { id: "pan" as CanvasTool, icon: Hand, label: "Pan Tool (H)", hotkey: "H" },
+    { id: "draw" as CanvasTool, icon: Pencil, label: "Draw (D)", hotkey: "D" },
+    { id: "erase" as CanvasTool, icon: Eraser, label: "Erase (E)", hotkey: "E" },
+    { id: "measure" as CanvasTool, icon: Ruler, label: "Measure (M)", hotkey: "M" },
   ];
 
   const handleRotate = () => {
-    toast.info("Rotate 90° clockwise");
+    const newRotation = (imageTransform.rotation + 90) % 360;
+    onTransformChange?.({ ...imageTransform, rotation: newRotation });
+    toast.success(`Rotated to ${newRotation}°`);
   };
 
   const handleFlipH = () => {
-    toast.info("Flip horizontal");
+    onTransformChange?.({ ...imageTransform, flipH: !imageTransform.flipH });
+    toast.success(imageTransform.flipH ? "Flip horizontal reset" : "Flipped horizontally");
   };
 
   const handleFlipV = () => {
-    toast.info("Flip vertical");
+    onTransformChange?.({ ...imageTransform, flipV: !imageTransform.flipV });
+    toast.success(imageTransform.flipV ? "Flip vertical reset" : "Flipped vertically");
   };
 
   const handleResetFilters = () => {
-    setBrightness(100);
-    setContrast(100);
-    setSaturation(100);
+    onFiltersChange?.({ brightness: 100, contrast: 100, saturation: 100 });
     toast.success("Filters reset");
   };
 
   const handleCopy = () => {
+    // Copy is handled by canvas keyboard shortcuts
     toast.info("Copy annotations (Ctrl+C)");
   };
 
   const handleCut = () => {
+    // Cut will copy and delete selected
     toast.info("Cut annotations (Ctrl+X)");
   };
 
@@ -199,11 +208,11 @@ export const AnnotationToolbar = ({
                   <Sun className="w-3 h-3" />
                   Brightness
                 </Label>
-                <span className="text-xs text-muted-foreground">{brightness}%</span>
+                <span className="text-xs text-muted-foreground">{imageFilters.brightness}%</span>
               </div>
               <Slider
-                value={[brightness]}
-                onValueChange={(v) => setBrightness(v[0])}
+                value={[imageFilters.brightness]}
+                onValueChange={(v) => onFiltersChange?.({ ...imageFilters, brightness: v[0] })}
                 min={0}
                 max={200}
                 step={1}
@@ -217,11 +226,11 @@ export const AnnotationToolbar = ({
                   <Contrast className="w-3 h-3" />
                   Contrast
                 </Label>
-                <span className="text-xs text-muted-foreground">{contrast}%</span>
+                <span className="text-xs text-muted-foreground">{imageFilters.contrast}%</span>
               </div>
               <Slider
-                value={[contrast]}
-                onValueChange={(v) => setContrast(v[0])}
+                value={[imageFilters.contrast]}
+                onValueChange={(v) => onFiltersChange?.({ ...imageFilters, contrast: v[0] })}
                 min={0}
                 max={200}
                 step={1}
@@ -235,11 +244,11 @@ export const AnnotationToolbar = ({
                   <Droplet className="w-3 h-3" />
                   Saturation
                 </Label>
-                <span className="text-xs text-muted-foreground">{saturation}%</span>
+                <span className="text-xs text-muted-foreground">{imageFilters.saturation}%</span>
               </div>
               <Slider
-                value={[saturation]}
-                onValueChange={(v) => setSaturation(v[0])}
+                value={[imageFilters.saturation]}
+                onValueChange={(v) => onFiltersChange?.({ ...imageFilters, saturation: v[0] })}
                 min={0}
                 max={200}
                 step={1}
@@ -267,7 +276,7 @@ export const AnnotationToolbar = ({
           size="sm"
           variant="ghost"
           onClick={() => {
-            setShowAnnotations(!showAnnotations);
+            onShowAnnotationsChange?.(!showAnnotations);
             toast.info(showAnnotations ? "Annotations hidden" : "Annotations visible");
           }}
           className="h-8 w-8 p-0"
@@ -283,7 +292,7 @@ export const AnnotationToolbar = ({
           size="sm"
           variant="ghost"
           onClick={() => {
-            setLockAnnotations(!lockAnnotations);
+            onLockAnnotationsChange?.(!lockAnnotations);
             toast.info(lockAnnotations ? "Annotations unlocked" : "Annotations locked");
           }}
           className="h-8 w-8 p-0"

@@ -48,6 +48,16 @@ const Index = () => {
     gridMode,
     setGridMode,
     selectedImage,
+    canvasTool,
+    setCanvasTool,
+    imageTransform,
+    setImageTransform,
+    imageFilters,
+    setImageFilters,
+    showAnnotations,
+    setShowAnnotations,
+    lockAnnotations,
+    setLockAnnotations,
   } = useAnnotationState();
 
   const filteredImages = useImageFilters(images, filters);
@@ -165,6 +175,16 @@ const Index = () => {
         <div className="flex-1 flex flex-col overflow-hidden">
           <AnnotationModeSelector mode={mode} onModeChange={setMode} />
           <AnnotationToolbar
+            activeTool={canvasTool}
+            onToolChange={setCanvasTool}
+            imageTransform={imageTransform}
+            onTransformChange={setImageTransform}
+            imageFilters={imageFilters}
+            onFiltersChange={setImageFilters}
+            showAnnotations={showAnnotations}
+            onShowAnnotationsChange={setShowAnnotations}
+            lockAnnotations={lockAnnotations}
+            onLockAnnotationsChange={setLockAnnotations}
             onSave={handleSave}
             onExport={handleExport}
           />
@@ -233,6 +253,11 @@ const Index = () => {
               onGridDeletePolygon={handleGridDeletePolygon}
               onGridToggleTag={handleGridToggleTag}
               onImageSelect={setSelectedImageId}
+              activeTool={canvasTool}
+              imageTransform={imageTransform}
+              imageFilters={imageFilters}
+              showAnnotations={showAnnotations}
+              lockAnnotations={lockAnnotations}
             />
           </div>
 

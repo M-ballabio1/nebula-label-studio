@@ -44,6 +44,11 @@ interface AnnotationContentProps {
   onGridDeletePolygon: (imageId: string, id: string) => void;
   onGridToggleTag: (imageId: string, labelId: string) => void;
   onImageSelect: (imageId: string) => void;
+  activeTool?: "select" | "pan" | "draw" | "erase" | "measure";
+  imageTransform?: { rotation: number; flipH: boolean; flipV: boolean };
+  imageFilters?: { brightness: number; contrast: number; saturation: number };
+  showAnnotations?: boolean;
+  lockAnnotations?: boolean;
 }
 
 export const AnnotationContent = ({
@@ -79,6 +84,11 @@ export const AnnotationContent = ({
   onGridDeletePolygon,
   onGridToggleTag,
   onImageSelect,
+  activeTool,
+  imageTransform,
+  imageFilters,
+  showAnnotations,
+  lockAnnotations,
 }: AnnotationContentProps) => {
   const displayImages = getDisplayImages(gridMode, selectedImage, filteredImages);
 
@@ -129,6 +139,11 @@ export const AnnotationContent = ({
             onAddPolygon={onAddPolygon}
             onDeletePolygon={onDeletePolygon}
             onImageDimensions={onSegmentationImageDimensions}
+            activeTool={activeTool}
+            imageTransform={imageTransform}
+            imageFilters={imageFilters}
+            showAnnotations={showAnnotations}
+            lockAnnotations={lockAnnotations}
           />
         )}
         {mode === "audio" && (
