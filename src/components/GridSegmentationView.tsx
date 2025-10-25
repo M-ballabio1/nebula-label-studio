@@ -1,6 +1,5 @@
 import { EnhancedSegmentationCanvas } from "./EnhancedSegmentationCanvas";
 import { ImageItem, Label, SegmentationPolygon } from "@/types/annotation";
-import { getGridImageHeight } from "@/utils/gridUtils";
 import { GridMode } from "@/types/gridMode";
 
 interface GridSegmentationViewProps {
@@ -32,8 +31,38 @@ export const GridSegmentationView = ({
   onImageSelect,
   onImageDimensions,
 }: GridSegmentationViewProps) => {
+  const getGridClass = (): string => {
+    switch (gridMode) {
+      case "grid4":
+        return "grid grid-cols-2 gap-4";
+      case "grid6":
+        return "grid grid-cols-3 gap-4";
+      case "grid8":
+        return "grid grid-cols-4 gap-4";
+      case "grid12":
+        return "grid grid-cols-4 gap-3";
+      default:
+        return "";
+    }
+  };
+
+  const getImageHeight = (): string => {
+    switch (gridMode) {
+      case "grid4":
+        return "450px";
+      case "grid6":
+        return "380px";
+      case "grid8":
+        return "320px";
+      case "grid12":
+        return "280px";
+      default:
+        return "400px";
+    }
+  };
+
   return (
-    <>
+    <div className={getGridClass()}>
       {images.map((img) => (
         <div
           key={img.id}
@@ -42,7 +71,7 @@ export const GridSegmentationView = ({
               ? "border-primary shadow-lg"
               : "border-border hover:border-primary/50"
           }`}
-          style={{ minHeight: getGridImageHeight(gridMode) }}
+          style={{ height: getImageHeight() }}
         >
           <div
             onClick={() => onImageSelect(img.id)}
@@ -78,6 +107,6 @@ export const GridSegmentationView = ({
           />
         </div>
       ))}
-    </>
+    </div>
   );
 };
