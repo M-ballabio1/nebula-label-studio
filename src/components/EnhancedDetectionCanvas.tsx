@@ -536,11 +536,6 @@ export const EnhancedDetectionCanvas = ({
           <span className="text-xs font-medium text-muted-foreground px-2 py-1 rounded bg-muted">
             Zoom: {Math.round(zoom * 100)}%
           </span>
-          {selectedLabelId && (
-            <span className="text-xs font-medium text-primary px-2 py-1 rounded bg-primary/10 border border-primary/20">
-              Drawing: {labels.find((l) => l.id === selectedLabelId)?.name}
-            </span>
-          )}
         </div>
         
         {selectedBox && (

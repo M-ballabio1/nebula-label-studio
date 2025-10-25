@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Header } from "@/components/Header";
 import { AnnotationModeSelector } from "@/components/AnnotationModeSelector";
 import { AnnotationToolbar } from "@/components/AnnotationToolbar";
@@ -6,14 +7,21 @@ import { ImageNavigationBar } from "@/components/ImageNavigationBar";
 import { ImageFilterBar } from "@/components/ImageFilterBar";
 import { SidebarContent } from "@/components/SidebarContent";
 import { AnnotationContent } from "@/components/AnnotationContent";
+import { ExportModal } from "@/components/ExportModal";
+import { SaveAnimation } from "@/components/SaveAnimation";
 import { useAnnotationState } from "@/hooks/useAnnotationState";
 import { useImageFilters } from "@/hooks/useImageFilters";
 import { useImageNavigation } from "@/hooks/useImageNavigation";
 import { useAnnotationHandlers } from "@/hooks/useAnnotationHandlers";
 import { useGridAnnotationHandlers } from "@/hooks/useGridAnnotationHandlers";
 import { useHotkeys } from "@/hooks/useHotkeys";
+import { toast } from "sonner";
 
 const Index = () => {
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [showSaveAnimation, setShowSaveAnimation] = useState(false);
+  const [zoom, setZoom] = useState(1);
+
   const {
     mode,
     setMode,
@@ -83,6 +91,29 @@ const Index = () => {
 
   useHotkeys(labels, setSelectedLabelId);
 
+  const handleSave = () => {
+    setShowSaveAnimation(true);
+  };
+
+  const handleExport = () => {
+    setShowExportModal(true);
+  };
+
+  const handleZoomIn = () => {
+    setZoom((z) => Math.min(3, z * 1.2));
+    toast.info(`Zoom: ${Math.round(Math.min(3, zoom * 1.2) * 100)}%`);
+  };
+
+  const handleZoomOut = () => {
+    setZoom((z) => Math.max(0.5, z / 1.2));
+    toast.info(`Zoom: ${Math.round(Math.max(0.5, zoom / 1.2) * 100)}%`);
+  };
+
+  const handleZoomReset = () => {
+    setZoom(1);
+    toast.info("Zoom reset to 100%");
+  };
+
   return (
     <div className="h-screen flex flex-col bg-background">
       <Header mode={mode} images={images} labels={labels} />
@@ -112,7 +143,10 @@ const Index = () => {
 
         <div className="flex-1 flex flex-col overflow-hidden">
           <AnnotationModeSelector mode={mode} onModeChange={setMode} />
-          <AnnotationToolbar />
+          <AnnotationToolbar
+            onSave={handleSave}
+            onExport={handleExport}
+          />
 
           {(mode === "detection" ||
             mode === "segmentation" ||
@@ -137,6 +171,10 @@ const Index = () => {
               canGoNext={canGoNext}
               onPrevious={handlePreviousImage}
               onNext={handleNextImage}
+              zoom={zoom}
+              onZoomIn={handleZoomIn}
+              onZoomOut={handleZoomOut}
+              onZoomReset={handleZoomReset}
             />
           )}
 
@@ -186,6 +224,22 @@ const Index = () => {
           )}
         </div>
       </div>
+
+      <ExportModal
+        open={showExportModal}
+        onOpenChange={setShowExportModal}
+        mode={mode}
+        images={images}
+        labels={labels}
+      />
+
+      <SaveAnimation
+        show={showSaveAnimation}
+        onComplete={() => {
+          setShowSaveAnimation(false);
+          toast.success("Annotations saved successfully!");
+        }}
+      />
     </div>
   );
 };

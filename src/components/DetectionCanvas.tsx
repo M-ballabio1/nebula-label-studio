@@ -191,11 +191,6 @@ export const DetectionCanvas = ({
           Reset View
         </Button>
         <div className="flex-1" />
-        <span className="text-xs text-muted-foreground">
-          {selectedLabelId
-            ? `Drawing: ${labels.find((l) => l.id === selectedLabelId)?.name || ""}`
-            : "Select a label to start drawing"}
-        </span>
         {hoveredBoxId && (
           <Button
             size="sm"
