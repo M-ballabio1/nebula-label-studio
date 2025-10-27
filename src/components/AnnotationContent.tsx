@@ -4,6 +4,7 @@ import { EnhancedDetectionCanvas } from "./EnhancedDetectionCanvas";
 import { ClassificationPanel } from "./ClassificationPanel";
 import { EnhancedSegmentationCanvas } from "./EnhancedSegmentationCanvas";
 import { AudioAnnotationCanvas } from "./AudioAnnotationCanvas";
+import { AudioSpectrogramCanvas } from "./AudioSpectrogramCanvas";
 import { TextAnnotationCanvas } from "./TextAnnotationCanvas";
 import { GridDetectionView } from "./GridDetectionView";
 import { GridSegmentationView } from "./GridSegmentationView";
@@ -167,8 +168,8 @@ export const AnnotationContent = ({
           />
         )}
         {mode === "audio" && (
-          <AudioAnnotationCanvas
-            audioUrl={SAMPLE_AUDIO_URL}
+          <AudioSpectrogramCanvas
+            audioUrl="/audio/sample1.mp3"
             segments={audioSegments}
             labels={labels}
             selectedLabelId={selectedLabelId}

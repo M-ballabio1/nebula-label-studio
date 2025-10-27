@@ -12,13 +12,13 @@ interface EnhancedDetectionCanvasProps {
   boxes: BoundingBox[];
   labels: Label[];
   selectedLabelId: string | null;
-  onAddBox: (box: BoundingBox) => void;
+  onAddBox: (box: Omit<BoundingBox, "id">) => void;
   onDeleteBox: (id: string) => void;
   onUpdateBox: (id: string, updates: Partial<BoundingBox>) => void;
-  onImageLoad?: () => void;
-  onBoxSelect?: (id: string | null) => void;
-  onBoxHover?: (id: string | null) => void;
-  activeTool?: "draw" | "select" | "move" | "resize";
+  onImageLoad?: (dims: { width: number; height: number }) => void;
+  onBoxSelect?: (box: BoundingBox | null) => void;
+  onBoxHover?: (box: BoundingBox | null) => void;
+  activeTool?: "select" | "pan" | "draw" | "erase" | "measure";
   imageTransform?: { rotation: number; flipH: boolean; flipV: boolean };
   imageFilters?: { brightness: number; contrast: number; saturation: number };
   showAnnotations?: boolean;
@@ -115,8 +115,8 @@ export const EnhancedDetectionCanvas = ({
           toast.success("Box copied");
         }
       }
-      if ((e.ctrlKey || e.metaKey) && e.key === "v" && copiedBox) {
-        onAddBox({ ...copiedBox, x: copiedBox.x + 20, y: copiedBox.y + 20 });
+      if ((e.ctrlKey || e.metaKey) && e.key === "v" && copiedBox && selectedLabelId) {
+        onAddBox({ ...copiedBox, x: copiedBox.x + 0.05, y: copiedBox.y + 0.05, labelId: selectedLabelId });
         toast.success("Box pasted");
       }
       // Hotkeys for labels
