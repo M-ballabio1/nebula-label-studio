@@ -13,6 +13,8 @@ import {
 import { Label as UILabel } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import WaveSurfer from "wavesurfer.js";
+import SpectrogramPlugin from "wavesurfer.js/dist/plugins/spectrogram.js";
 
 interface AudioSpectrogramCanvasProps {
   audioUrl: string;
@@ -24,10 +26,10 @@ interface AudioSpectrogramCanvasProps {
 }
 
 interface SpectrogramSettings {
-  minFreq: number;
-  maxFreq: number;
-  colorScheme: "viridis" | "grayscale";
-  fftSize: number;
+  colorMap: "viridis" | "grayscale";
+  fftSamples: number;
+  frequencyMin: number;
+  frequencyMax: number;
 }
 
 export const AudioSpectrogramCanvas = ({
@@ -38,13 +40,10 @@ export const AudioSpectrogramCanvas = ({
   onAddSegment,
   onDeleteSegment,
 }: AudioSpectrogramCanvasProps) => {
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const waveformCanvasRef = useRef<HTMLCanvasElement>(null);
-  const spectrogramCanvasRef = useRef<HTMLCanvasElement>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const analyserRef = useRef<AnalyserNode | null>(null);
-  const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
-  const animationFrameRef = useRef<number | null>(null);
+  const waveformRef = useRef<HTMLDivElement>(null);
+  const spectrogramRef = useRef<HTMLDivElement>(null);
+  const wavesurferRef = useRef<WaveSurfer | null>(null);
+  const spectrogramPluginRef = useRef<any>(null);
   
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -55,239 +54,146 @@ export const AudioSpectrogramCanvas = ({
   const [hoveredSegmentId, setHoveredSegmentId] = useState<string | null>(null);
   const [spectrogramZoom, setSpectrogramZoom] = useState(1);
   const [spectrogramSettings, setSpectrogramSettings] = useState<SpectrogramSettings>({
-    minFreq: 0,
-    maxFreq: 8000,
-    colorScheme: "viridis",
-    fftSize: 2048,
+    colorMap: "viridis",
+    fftSamples: 512,
+    frequencyMin: 0,
+    frequencyMax: 8000,
   });
-  const [spectrogramData, setSpectrogramData] = useState<ImageData | null>(null);
 
   useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
+    if (!waveformRef.current || !spectrogramRef.current) return;
 
-    const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
-    const handleLoadedMetadata = () => {
-      setDuration(audio.duration);
-      initAudioContext();
-      generateSpectrogram();
-    };
+    // Initialize WaveSurfer
+    const ws = WaveSurfer.create({
+      container: waveformRef.current,
+      waveColor: "hsl(var(--muted-foreground))",
+      progressColor: "hsl(var(--primary))",
+      cursorColor: "hsl(var(--primary))",
+      barWidth: 2,
+      barRadius: 3,
+      cursorWidth: 2,
+      height: 100,
+      barGap: 1,
+    });
 
-    audio.addEventListener("timeupdate", handleTimeUpdate);
-    audio.addEventListener("loadedmetadata", handleLoadedMetadata);
+    // Initialize Spectrogram Plugin
+    const spectrogramPlugin = SpectrogramPlugin.create({
+      container: spectrogramRef.current,
+      labels: true,
+      height: 300,
+      splitChannels: false,
+      colorMap: spectrogramSettings.colorMap === "viridis" 
+        ? [[68, 1, 84], [72, 40, 120], [62, 73, 137], [49, 104, 142], [38, 130, 142], [31, 158, 137], [53, 183, 121], [109, 205, 89], [180, 222, 44], [253, 231, 37]]
+        : undefined,
+      frequencyMin: spectrogramSettings.frequencyMin,
+      frequencyMax: spectrogramSettings.frequencyMax,
+      fftSamples: spectrogramSettings.fftSamples,
+    });
+
+    ws.registerPlugin(spectrogramPlugin);
+    ws.load(audioUrl);
+
+    // Event listeners
+    ws.on("ready", () => {
+      setDuration(ws.getDuration());
+    });
+
+    ws.on("timeupdate", (time) => {
+      setCurrentTime(time);
+    });
+
+    ws.on("finish", () => {
+      setIsPlaying(false);
+    });
+
+    ws.on("play", () => {
+      setIsPlaying(true);
+    });
+
+    ws.on("pause", () => {
+      setIsPlaying(false);
+    });
+
+    wavesurferRef.current = ws;
+    spectrogramPluginRef.current = spectrogramPlugin;
 
     return () => {
-      audio.removeEventListener("timeupdate", handleTimeUpdate);
-      audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
-      }
+      ws.destroy();
     };
   }, [audioUrl]);
 
   useEffect(() => {
-    drawWaveform();
-  }, [segments, currentTime, duration, hoveredSegmentId, selectionStart, selectionEnd]);
+    // Reinitialize when settings change
+    if (wavesurferRef.current && spectrogramRef.current && waveformRef.current) {
+      wavesurferRef.current.destroy();
+      
+      const ws = WaveSurfer.create({
+        container: waveformRef.current,
+        waveColor: "hsl(var(--muted-foreground))",
+        progressColor: "hsl(var(--primary))",
+        cursorColor: "hsl(var(--primary))",
+        barWidth: 2,
+        barRadius: 3,
+        cursorWidth: 2,
+        height: 100,
+        barGap: 1,
+      });
 
-  useEffect(() => {
-    if (audioContextRef.current) {
-      generateSpectrogram();
+      const spectrogramPlugin = SpectrogramPlugin.create({
+        container: spectrogramRef.current,
+        labels: true,
+        height: 300 * spectrogramZoom,
+        splitChannels: false,
+        colorMap: spectrogramSettings.colorMap === "viridis" 
+          ? [[68, 1, 84], [72, 40, 120], [62, 73, 137], [49, 104, 142], [38, 130, 142], [31, 158, 137], [53, 183, 121], [109, 205, 89], [180, 222, 44], [253, 231, 37]]
+          : undefined,
+        frequencyMin: spectrogramSettings.frequencyMin,
+        frequencyMax: spectrogramSettings.frequencyMax,
+        fftSamples: spectrogramSettings.fftSamples,
+      });
+
+      ws.registerPlugin(spectrogramPlugin);
+      ws.load(audioUrl);
+
+      ws.on("ready", () => {
+        setDuration(ws.getDuration());
+      });
+
+      ws.on("timeupdate", (time) => {
+        setCurrentTime(time);
+      });
+
+      ws.on("finish", () => {
+        setIsPlaying(false);
+      });
+
+      ws.on("play", () => {
+        setIsPlaying(true);
+      });
+
+      ws.on("pause", () => {
+        setIsPlaying(false);
+      });
+
+      wavesurferRef.current = ws;
+      spectrogramPluginRef.current = spectrogramPlugin;
     }
-  }, [spectrogramSettings, audioUrl]);
+  }, [spectrogramSettings, spectrogramZoom]);
 
-  const initAudioContext = () => {
-    if (!audioRef.current || audioContextRef.current) return;
-
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const source = audioContext.createMediaElementSource(audioRef.current);
-    const analyser = audioContext.createAnalyser();
-    
-    analyser.fftSize = spectrogramSettings.fftSize;
-    analyser.smoothingTimeConstant = 0.8;
-    
-    source.connect(analyser);
-    analyser.connect(audioContext.destination);
-    
-    audioContextRef.current = audioContext;
-    analyserRef.current = analyser;
-    sourceRef.current = source;
-  };
-
-  const generateSpectrogram = async () => {
-    const canvas = spectrogramCanvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const width = canvas.width;
-    const height = canvas.height;
-
-    // Create offline context for spectrogram generation
-    try {
-      const response = await fetch(audioUrl);
-      const arrayBuffer = await response.arrayBuffer();
-      const offlineContext = new OfflineAudioContext(2, 44100 * 10, 44100);
-      const audioBuffer = await offlineContext.decodeAudioData(arrayBuffer);
-      
-      const analyser = offlineContext.createAnalyser();
-      analyser.fftSize = spectrogramSettings.fftSize;
-      
-      const source = offlineContext.createBufferSource();
-      source.buffer = audioBuffer;
-      source.connect(analyser);
-      analyser.connect(offlineContext.destination);
-      
-      // Generate spectrogram data
-      const bufferLength = analyser.frequencyBinCount;
-      const dataArray = new Uint8Array(bufferLength);
-      
-      // Clear canvas
-      ctx.fillStyle = "#000";
-      ctx.fillRect(0, 0, width, height);
-      
-      // Draw spectrogram columns
-      const sliceWidth = width / (audioBuffer.duration * 20);
-      let x = 0;
-      
-      for (let i = 0; i < audioBuffer.duration * 20; i++) {
-        analyser.getByteFrequencyData(dataArray);
-        
-        // Draw frequency bins
-        for (let j = 0; j < bufferLength; j++) {
-          const freq = (j / bufferLength) * (offlineContext.sampleRate / 2);
-          
-          // Filter by frequency range
-          if (freq < spectrogramSettings.minFreq || freq > spectrogramSettings.maxFreq) continue;
-          
-          const value = dataArray[j];
-          const y = height - (j / bufferLength) * height;
-          const color = getColorForValue(value, spectrogramSettings.colorScheme);
-          
-          ctx.fillStyle = color;
-          ctx.fillRect(x, y, sliceWidth, 2);
-        }
-        
-        x += sliceWidth;
-      }
-      
-      const imageData = ctx.getImageData(0, 0, width, height);
-      setSpectrogramData(imageData);
-    } catch (error) {
-      console.error("Error generating spectrogram:", error);
-    }
-  };
-
-  const getColorForValue = (value: number, scheme: "viridis" | "grayscale"): string => {
-    const normalized = value / 255;
-    
-    if (scheme === "grayscale") {
-      const gray = Math.floor(normalized * 255);
-      return `rgb(${gray},${gray},${gray})`;
-    }
-    
-    // Viridis color scheme approximation
-    const viridis = [
-      [68, 1, 84],
-      [72, 40, 120],
-      [62, 73, 137],
-      [49, 104, 142],
-      [38, 130, 142],
-      [31, 158, 137],
-      [53, 183, 121],
-      [109, 205, 89],
-      [180, 222, 44],
-      [253, 231, 37],
-    ];
-    
-    const index = Math.floor(normalized * (viridis.length - 1));
-    const color = viridis[index] || viridis[0];
-    return `rgb(${color[0]},${color[1]},${color[2]})`;
-  };
-
-  const drawWaveform = () => {
-    const canvas = waveformCanvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const width = canvas.width;
-    const height = canvas.height;
-
-    ctx.clearRect(0, 0, width, height);
-
-    // Draw background
-    ctx.fillStyle = "hsl(var(--muted))";
-    ctx.fillRect(0, 0, width, height);
-
-    // Draw segments
-    segments.forEach((segment) => {
-      const label = labels.find((l) => l.id === segment.labelId);
-      if (!label) return;
-
-      const x = (segment.startTime / duration) * width;
-      const w = ((segment.endTime - segment.startTime) / duration) * width;
-
-      ctx.fillStyle = segment.id === hoveredSegmentId 
-        ? label.color + "99" 
-        : label.color + "66";
-      ctx.fillRect(x, 0, w, height);
-
-      // Draw label
-      ctx.fillStyle = "hsl(var(--foreground))";
-      ctx.font = "12px sans-serif";
-      ctx.fillText(label.name, x + 4, 20);
-    });
-
-    // Draw selection
-    if (selectionStart !== null && selectionEnd !== null) {
-      const x = (selectionStart / duration) * width;
-      const w = ((selectionEnd - selectionStart) / duration) * width;
-      ctx.fillStyle = "rgba(59, 130, 246, 0.3)";
-      ctx.fillRect(x, 0, w, height);
-      
-      // Draw selection borders
-      ctx.strokeStyle = "rgb(59, 130, 246)";
-      ctx.lineWidth = 2;
-      ctx.strokeRect(x, 0, w, height);
-    }
-
-    // Draw playhead
-    const playheadX = (currentTime / duration) * width;
-    ctx.strokeStyle = "hsl(var(--primary))";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(playheadX, 0);
-    ctx.lineTo(playheadX, height);
-    ctx.stroke();
-  };
-
-  const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>, canvasRef: React.RefObject<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas || !duration) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const time = (x / canvas.width) * duration;
-
-    if (!selectedLabelId) {
-      // Seek
-      if (audioRef.current) {
-        audioRef.current.currentTime = time;
-      }
-      return;
-    }
+  // Handle region selection on waveform/spectrogram
+  const handleRegionClick = useCallback(() => {
+    const ws = wavesurferRef.current;
+    if (!ws || !selectedLabelId) return;
 
     if (!isSelecting) {
       setIsSelecting(true);
-      setSelectionStart(time);
-      setSelectionEnd(time);
+      const currentTime = ws.getCurrentTime();
+      setSelectionStart(currentTime);
+      setSelectionEnd(currentTime);
     } else if (selectionStart !== null) {
-      const startTime = Math.min(selectionStart, time);
-      const endTime = Math.max(selectionStart, time);
+      const currentTime = ws.getCurrentTime();
+      const startTime = Math.min(selectionStart, currentTime);
+      const endTime = Math.max(selectionStart, currentTime);
       
       if (endTime - startTime > 0.1) {
         onAddSegment({
@@ -295,54 +201,31 @@ export const AudioSpectrogramCanvas = ({
           endTime,
           labelId: selectedLabelId,
         });
+        toast.success("Audio segment added!");
       }
       setIsSelecting(false);
       setSelectionStart(null);
       setSelectionEnd(null);
     }
-  };
+  }, [isSelecting, selectionStart, selectedLabelId, onAddSegment]);
 
-  const handleCanvasHover = (e: React.MouseEvent<HTMLCanvasElement>, canvasRef: React.RefObject<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas || !duration) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const time = (x / canvas.width) * duration;
-
-    // Update selection end while selecting
-    if (isSelecting && selectionStart !== null) {
-      setSelectionEnd(time);
-    }
-
-    const hoveredSegment = segments.find(
-      (seg) => time >= seg.startTime && time <= seg.endTime
-    );
-    setHoveredSegmentId(hoveredSegment?.id || null);
-  };
 
   const togglePlayPause = () => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    if (isPlaying) {
-      audio.pause();
-    } else {
-      audio.play();
-    }
-    setIsPlaying(!isPlaying);
+    const ws = wavesurferRef.current;
+    if (!ws) return;
+    ws.playPause();
   };
 
   const skipBackward = () => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = Math.max(0, currentTime - 5);
-    }
+    const ws = wavesurferRef.current;
+    if (!ws) return;
+    ws.skip(-5);
   };
 
   const skipForward = () => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = Math.min(duration, currentTime + 5);
-    }
+    const ws = wavesurferRef.current;
+    if (!ws) return;
+    ws.skip(5);
   };
 
   const formatTime = (time: number) => {
@@ -352,13 +235,18 @@ export const AudioSpectrogramCanvas = ({
   };
 
   const exportSpectrogramSelection = useCallback(() => {
-    const canvas = spectrogramCanvasRef.current;
-    if (!canvas || selectionStart === null || selectionEnd === null) {
-      toast.error("Please select a region first");
+    if (!spectrogramRef.current || selectionStart === null || selectionEnd === null) {
+      toast.error("Please select a region by clicking twice on the waveform");
       return;
     }
 
-    const width = canvas.width;
+    const spectrogramCanvas = spectrogramRef.current.querySelector("canvas");
+    if (!spectrogramCanvas) {
+      toast.error("Spectrogram not ready");
+      return;
+    }
+
+    const width = spectrogramCanvas.width;
     const startX = (selectionStart / duration) * width;
     const endX = (selectionEnd / duration) * width;
     const selectionWidth = endX - startX;
@@ -366,13 +254,13 @@ export const AudioSpectrogramCanvas = ({
     // Create temporary canvas for cropped region
     const tempCanvas = document.createElement("canvas");
     tempCanvas.width = selectionWidth;
-    tempCanvas.height = canvas.height;
+    tempCanvas.height = spectrogramCanvas.height;
     const tempCtx = tempCanvas.getContext("2d");
     
     if (!tempCtx) return;
 
     // Copy selection to temp canvas
-    tempCtx.drawImage(canvas, startX, 0, selectionWidth, canvas.height, 0, 0, selectionWidth, canvas.height);
+    tempCtx.drawImage(spectrogramCanvas, startX, 0, selectionWidth, spectrogramCanvas.height, 0, 0, selectionWidth, spectrogramCanvas.height);
 
     // Export as JPG
     tempCanvas.toBlob((blob) => {
@@ -411,7 +299,6 @@ export const AudioSpectrogramCanvas = ({
 
   return (
     <div className="flex-1 flex flex-col bg-background overflow-hidden relative">
-      <audio ref={audioRef} src={audioUrl} />
       
       {/* Workflow Instructions */}
       <WorkflowInfoCard
@@ -419,10 +306,10 @@ export const AudioSpectrogramCanvas = ({
         icon={<Music className="w-4 h-4 text-primary" />}
         steps={[
           { text: "Select a label from the sidebar" },
-          { text: "Click and drag on waveform/spectrogram to select region" },
-          { text: "Adjust spectrogram settings in settings menu" },
-          { text: "Export selected regions as JPG images" },
-          { text: "Use zoom controls for detailed analysis" }
+          { text: "Click twice on the waveform to mark start and end of a segment" },
+          { text: "FFT settings: Adjust frequency range, color scheme, and FFT samples" },
+          { text: "Export: Select a region and click Export to save as JPG" },
+          { text: "Zoom: Use zoom controls to magnify the spectrogram vertically" }
         ]}
         shortcuts={[
           { keys: "Space", description: "to play/pause" },
@@ -449,7 +336,7 @@ export const AudioSpectrogramCanvas = ({
           </span>
           {isSelecting && selectionStart !== null && (
             <Badge variant="outline" className="animate-pulse">
-              Selection started at {formatTime(selectionStart)} - Drag to finish
+              Selection started at {formatTime(selectionStart)} - Click again to finish
             </Badge>
           )}
         </div>
@@ -506,8 +393,8 @@ export const AudioSpectrogramCanvas = ({
                 <div className="space-y-2">
                   <UILabel>Color Scheme</UILabel>
                   <Select
-                    value={spectrogramSettings.colorScheme}
-                    onValueChange={(value) => setSpectrogramSettings({ ...spectrogramSettings, colorScheme: value as "viridis" | "grayscale" })}
+                    value={spectrogramSettings.colorMap}
+                    onValueChange={(value) => setSpectrogramSettings({ ...spectrogramSettings, colorMap: value as "viridis" | "grayscale" })}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -520,41 +407,41 @@ export const AudioSpectrogramCanvas = ({
                 </div>
 
                 <div className="space-y-2">
-                  <UILabel>Min Frequency: {spectrogramSettings.minFreq} Hz</UILabel>
+                  <UILabel>Min Frequency: {spectrogramSettings.frequencyMin} Hz</UILabel>
                   <Slider
-                    value={[spectrogramSettings.minFreq]}
-                    onValueChange={([value]) => setSpectrogramSettings({ ...spectrogramSettings, minFreq: value })}
-                    max={spectrogramSettings.maxFreq - 100}
+                    value={[spectrogramSettings.frequencyMin]}
+                    onValueChange={([value]) => setSpectrogramSettings({ ...spectrogramSettings, frequencyMin: value })}
+                    max={spectrogramSettings.frequencyMax - 100}
                     step={100}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <UILabel>Max Frequency: {spectrogramSettings.maxFreq} Hz</UILabel>
+                  <UILabel>Max Frequency: {spectrogramSettings.frequencyMax} Hz</UILabel>
                   <Slider
-                    value={[spectrogramSettings.maxFreq]}
-                    onValueChange={([value]) => setSpectrogramSettings({ ...spectrogramSettings, maxFreq: value })}
-                    min={spectrogramSettings.minFreq + 100}
+                    value={[spectrogramSettings.frequencyMax]}
+                    onValueChange={([value]) => setSpectrogramSettings({ ...spectrogramSettings, frequencyMax: value })}
+                    min={spectrogramSettings.frequencyMin + 100}
                     max={20000}
                     step={100}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <UILabel>FFT Size</UILabel>
+                  <UILabel>FFT Samples (higher = more detail, slower)</UILabel>
                   <Select
-                    value={spectrogramSettings.fftSize.toString()}
-                    onValueChange={(value) => setSpectrogramSettings({ ...spectrogramSettings, fftSize: parseInt(value) })}
+                    value={spectrogramSettings.fftSamples.toString()}
+                    onValueChange={(value) => setSpectrogramSettings({ ...spectrogramSettings, fftSamples: parseInt(value) })}
                   >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="512">512</SelectItem>
+                      <SelectItem value="256">256 (Fast)</SelectItem>
+                      <SelectItem value="512">512 (Default)</SelectItem>
                       <SelectItem value="1024">1024</SelectItem>
-                      <SelectItem value="2048">2048 (Default)</SelectItem>
-                      <SelectItem value="4096">4096</SelectItem>
-                      <SelectItem value="8192">8192</SelectItem>
+                      <SelectItem value="2048">2048</SelectItem>
+                      <SelectItem value="4096">4096 (Detailed)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -573,58 +460,71 @@ export const AudioSpectrogramCanvas = ({
             <Download className="w-4 h-4 mr-1" />
             Export
           </Button>
-
-          {hoveredSegmentId && (
-            <Button
-              size="sm"
-              variant="destructive"
-              onClick={() => onDeleteSegment(hoveredSegmentId)}
-              title="Delete segment"
-            >
-              <Trash2 className="w-4 h-4 mr-1" />
-              Delete
-            </Button>
-          )}
+        </div>
+        
+        <div className="flex items-center gap-2">
+          {segments.map((segment) => {
+            const label = labels.find(l => l.id === segment.labelId);
+            if (!label) return null;
+            return (
+              <Badge
+                key={segment.id}
+                style={{ backgroundColor: label.color + "20", color: label.color }}
+                className="cursor-pointer hover:opacity-80"
+                onClick={() => {
+                  const ws = wavesurferRef.current;
+                  if (ws) {
+                    ws.seekTo(segment.startTime / duration);
+                  }
+                }}
+              >
+                {label.name} ({formatTime(segment.startTime)}-{formatTime(segment.endTime)})
+                <button
+                  className="ml-1 hover:text-destructive"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDeleteSegment(segment.id);
+                  }}
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              </Badge>
+            );
+          })}
         </div>
         <Slider
           value={[currentTime]}
           max={duration || 100}
           step={0.1}
           onValueChange={([value]) => {
-            if (audioRef.current) {
-              audioRef.current.currentTime = value;
+            const ws = wavesurferRef.current;
+            if (ws) {
+              ws.seekTo(value / duration);
             }
           }}
           className="cursor-pointer"
         />
       </div>
 
-      {/* Canvases */}
+      {/* Waveform and Spectrogram */}
       <div className="flex-1 p-4 overflow-auto space-y-4">
         {/* Waveform */}
         <div>
-          <h3 className="text-sm font-medium mb-2 text-muted-foreground">Waveform</h3>
-          <canvas
-            ref={waveformCanvasRef}
-            width={1200}
-            height={100}
+          <h3 className="text-sm font-medium mb-2 text-muted-foreground">Waveform (Click twice to create segments)</h3>
+          <div
+            ref={waveformRef}
             className="w-full border-2 rounded-lg cursor-pointer border-border hover:border-primary/50"
-            onClick={(e) => handleCanvasClick(e, waveformCanvasRef)}
-            onMouseMove={(e) => handleCanvasHover(e, waveformCanvasRef)}
+            onClick={handleRegionClick}
           />
         </div>
 
         {/* Spectrogram */}
         <div>
-          <h3 className="text-sm font-medium mb-2 text-muted-foreground">Spectrogram</h3>
-          <canvas
-            ref={spectrogramCanvasRef}
-            width={1200}
-            height={300}
-            style={{ transform: `scaleY(${spectrogramZoom})`, transformOrigin: 'top' }}
-            className="w-full border-2 rounded-lg cursor-crosshair border-border hover:border-primary/50 transition-transform"
-            onClick={(e) => handleCanvasClick(e, spectrogramCanvasRef)}
-            onMouseMove={(e) => handleCanvasHover(e, spectrogramCanvasRef)}
+          <h3 className="text-sm font-medium mb-2 text-muted-foreground">Spectrogram (FFT Analysis)</h3>
+          <div
+            ref={spectrogramRef}
+            className="w-full border-2 rounded-lg border-border"
+            style={{ height: `${300 * spectrogramZoom}px` }}
           />
         </div>
       </div>
@@ -632,7 +532,7 @@ export const AudioSpectrogramCanvas = ({
       {/* Stats Footer */}
       <div className="px-4 py-2 border-t bg-muted/30 text-xs text-muted-foreground flex items-center justify-between">
         <span>{segments.length} segment{segments.length !== 1 ? "s" : ""} created</span>
-        <span>Frequency range: {spectrogramSettings.minFreq}-{spectrogramSettings.maxFreq} Hz</span>
+        <span>Frequency range: {spectrogramSettings.frequencyMin}-{spectrogramSettings.frequencyMax} Hz | FFT: {spectrogramSettings.fftSamples} samples</span>
         <span>Total duration: {formatTime(duration)}</span>
       </div>
     </div>
