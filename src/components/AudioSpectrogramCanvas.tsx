@@ -14,7 +14,7 @@ import { Label as UILabel } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import WaveSurfer from "wavesurfer.js";
-import SpectrogramPlugin from "wavesurfer.js/dist/plugins/spectrogram.js";
+import SpectrogramPlugin from "wavesurfer.js/plugins/spectrogram";
 
 interface AudioSpectrogramCanvasProps {
   audioUrl: string;
@@ -77,17 +77,16 @@ export const AudioSpectrogramCanvas = ({
     });
 
     // Initialize Spectrogram Plugin
+    const colorMapArray = spectrogramSettings.colorMap === "viridis" 
+      ? [[68, 1, 84], [72, 40, 120], [62, 73, 137], [49, 104, 142], [38, 130, 142], [31, 158, 137], [53, 183, 121], [109, 205, 89], [180, 222, 44], [253, 231, 37]]
+      : undefined;
+    
     const spectrogramPlugin = SpectrogramPlugin.create({
       container: spectrogramRef.current,
       labels: true,
       height: 300,
       splitChannels: false,
-      colorMap: spectrogramSettings.colorMap === "viridis" 
-        ? [[68, 1, 84], [72, 40, 120], [62, 73, 137], [49, 104, 142], [38, 130, 142], [31, 158, 137], [53, 183, 121], [109, 205, 89], [180, 222, 44], [253, 231, 37]]
-        : undefined,
-      frequencyMin: spectrogramSettings.frequencyMin,
-      frequencyMax: spectrogramSettings.frequencyMax,
-      fftSamples: spectrogramSettings.fftSamples,
+      ...(colorMapArray && { colorMap: colorMapArray }),
     });
 
     ws.registerPlugin(spectrogramPlugin);
@@ -139,17 +138,16 @@ export const AudioSpectrogramCanvas = ({
         barGap: 1,
       });
 
+      const colorMapArray = spectrogramSettings.colorMap === "viridis" 
+        ? [[68, 1, 84], [72, 40, 120], [62, 73, 137], [49, 104, 142], [38, 130, 142], [31, 158, 137], [53, 183, 121], [109, 205, 89], [180, 222, 44], [253, 231, 37]]
+        : undefined;
+
       const spectrogramPlugin = SpectrogramPlugin.create({
         container: spectrogramRef.current,
         labels: true,
         height: 300 * spectrogramZoom,
         splitChannels: false,
-        colorMap: spectrogramSettings.colorMap === "viridis" 
-          ? [[68, 1, 84], [72, 40, 120], [62, 73, 137], [49, 104, 142], [38, 130, 142], [31, 158, 137], [53, 183, 121], [109, 205, 89], [180, 222, 44], [253, 231, 37]]
-          : undefined,
-        frequencyMin: spectrogramSettings.frequencyMin,
-        frequencyMax: spectrogramSettings.frequencyMax,
-        fftSamples: spectrogramSettings.fftSamples,
+        ...(colorMapArray && { colorMap: colorMapArray }),
       });
 
       ws.registerPlugin(spectrogramPlugin);
