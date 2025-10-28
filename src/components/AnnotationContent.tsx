@@ -169,7 +169,7 @@ export const AnnotationContent = ({
         )}
         {mode === "audio" && (
           <AudioSpectrogramCanvas
-            audioUrl="/audio/dvc_mice.wav"
+            audioUrl="/audio/sample1.mp3"
             segments={audioSegments}
             labels={labels}
             selectedLabelId={selectedLabelId}
