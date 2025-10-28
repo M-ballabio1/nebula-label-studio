@@ -73,3 +73,13 @@ export interface TextItem {
   name: string;
   annotations: TextAnnotation[];
 }
+
+export interface PDFItem {
+  id: string;
+  file: File;
+  name: string;
+  annotations: {
+    text: TextAnnotation[];
+    boxes: BoundingBox[];
+  };
+}

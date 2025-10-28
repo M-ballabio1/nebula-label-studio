@@ -176,6 +176,8 @@ export const AudioSpectrogramCanvas = ({
   const [selectionEnd, setSelectionEnd] = useState<number | null>(null);
   const [hoveredSegmentId, setHoveredSegmentId] = useState<string | null>(null);
   const [spectrogramZoom, setSpectrogramZoom] = useState(1);
+  const [waveformZoom, setWaveformZoom] = useState(1);
+  const [waveformHeight, setWaveformHeight] = useState(120);
   const [spectrogramSettings, setSpectrogramSettings] = useState<SpectrogramSettings>({
     colorMap: "spectral",
     fftSamples: 1024,
@@ -201,7 +203,7 @@ export const AudioSpectrogramCanvas = ({
 
         if (!isMounted) return;
 
-        // Initialize WaveSurfer
+        // Initialize WaveSurfer with unipolar waveform (0 to N, not bipolar)
         ws = WaveSurfer.create({
           container: waveformRef.current!,
           waveColor: "hsl(var(--muted-foreground))",
@@ -210,10 +212,12 @@ export const AudioSpectrogramCanvas = ({
           barWidth: 2,
           barRadius: 3,
           cursorWidth: 2,
-          height: 120,
+          height: waveformHeight,
           barGap: 1,
           normalize: true,
           backend: 'WebAudio',
+          minPxPerSec: 50 * waveformZoom,
+          hideScrollbar: false,
         });
 
         if (!isMounted) {
@@ -329,10 +333,12 @@ export const AudioSpectrogramCanvas = ({
             barWidth: 2,
             barRadius: 3,
             cursorWidth: 2,
-            height: 120,
+            height: waveformHeight,
             barGap: 1,
             normalize: true,
             backend: 'WebAudio',
+            minPxPerSec: 50 * waveformZoom,
+            hideScrollbar: false,
           });
 
           const colorMapArray = generateColorMap(spectrogramSettings.colorMap);
@@ -397,7 +403,7 @@ export const AudioSpectrogramCanvas = ({
         isMounted = false;
       };
     }
-  }, [spectrogramSettings, spectrogramZoom, audioUrl]);
+  }, [spectrogramSettings, spectrogramZoom, waveformZoom, waveformHeight, audioUrl]);
 
   // Handle region selection on waveform/spectrogram
   const handleRegionClick = useCallback(() => {
@@ -734,6 +740,41 @@ export const AudioSpectrogramCanvas = ({
                   />
                   <div className="text-xs text-muted-foreground">
                     Higher overlap = smoother time resolution, more computation
+                  </div>
+                </div>
+
+                {/* Waveform Controls */}
+                <div className="border-t pt-4 mt-4">
+                  <h4 className="text-sm font-semibold mb-3">Waveform Controls</h4>
+                  
+                  <div className="space-y-2 mb-3">
+                    <UILabel>Waveform Zoom: {waveformZoom.toFixed(1)}x</UILabel>
+                    <Slider
+                      value={[waveformZoom]}
+                      onValueChange={([value]) => setWaveformZoom(value)}
+                      min={1}
+                      max={100}
+                      step={1}
+                      className="cursor-pointer"
+                    />
+                    <div className="text-xs text-muted-foreground">
+                      Zoom into specific parts of the waveform
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <UILabel>Waveform Height: {waveformHeight}px</UILabel>
+                    <Slider
+                      value={[waveformHeight]}
+                      onValueChange={([value]) => setWaveformHeight(value)}
+                      min={64}
+                      max={512}
+                      step={32}
+                      className="cursor-pointer"
+                    />
+                    <div className="text-xs text-muted-foreground">
+                      Adjust detail level (peaks visibility)
+                    </div>
                   </div>
                 </div>
               </div>
