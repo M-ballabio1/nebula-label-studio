@@ -10,8 +10,8 @@ import { BoundingBox, TextAnnotation, Label as LabelType } from "@/types/annotat
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 
-// Set up PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+// Set up PDF.js worker with a reliable CDN
+pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
 interface PDFAnnotationCanvasProps {
   pdfFile: File | string | null;
@@ -273,12 +273,23 @@ export const PDFAnnotationCanvas = ({
                     <Document
                       file={getPdfSource()}
                       onLoadSuccess={onDocumentLoadSuccess}
+                      onLoadError={(error) => {
+                        console.error("PDF loading error:", error);
+                      }}
                       className="border rounded-lg shadow-lg bg-white"
                       loading={
                         <div className="flex items-center justify-center p-8">
                           <div className="text-center">
                             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
                             <p className="text-sm text-muted-foreground">Loading PDF...</p>
+                          </div>
+                        </div>
+                      }
+                      error={
+                        <div className="flex items-center justify-center p-8">
+                          <div className="text-center space-y-2">
+                            <p className="text-sm text-destructive font-medium">Failed to load PDF</p>
+                            <p className="text-xs text-muted-foreground">Please try uploading a different file</p>
                           </div>
                         </div>
                       }
