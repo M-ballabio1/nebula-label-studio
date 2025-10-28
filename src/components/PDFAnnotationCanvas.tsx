@@ -14,7 +14,7 @@ import "react-pdf/dist/Page/TextLayer.css";
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 interface PDFAnnotationCanvasProps {
-  pdfFile: File | null;
+  pdfFile: File | string | null;
   onFileUpload: (file: File) => void;
   textAnnotations: TextAnnotation[];
   boxAnnotations: BoundingBox[];
@@ -62,6 +62,14 @@ export const PDFAnnotationCanvas = ({
     if (file && file.type === "application/pdf") {
       onFileUpload(file);
     }
+  };
+
+  // Convert string URL to usable format for react-pdf
+  const getPdfSource = () => {
+    if (typeof pdfFile === 'string') {
+      return pdfFile;
+    }
+    return pdfFile;
   };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -151,17 +159,17 @@ export const PDFAnnotationCanvas = ({
       <Card className="m-4 p-4 bg-card/80 backdrop-blur border-primary/20">
         <div className="flex items-start gap-3">
           <div className="bg-primary/10 rounded-lg p-2">
-            <Upload className="w-5 h-5 text-primary" />
+            <Type className="w-5 h-5 text-primary" />
           </div>
           <div className="flex-1 space-y-2">
             <h3 className="font-semibold text-sm">PDF Annotation Workflow</h3>
             <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
-              <li>Upload a PDF document using the button below</li>
               <li>Select a label from the sidebar</li>
               <li>Choose annotation mode: Text (highlight) or Box (bounding box)</li>
               <li>Text mode: Select text to highlight it with the chosen label</li>
-              <li>Box mode: Click and drag to create bounding boxes</li>
-              <li>Navigate between pages to annotate the entire document</li>
+              <li>Box mode: Click and drag to create bounding boxes around elements</li>
+              <li>Scroll or use navigation to move between pages</li>
+              <li>Upload your own PDF using the button in the top right</li>
             </ol>
           </div>
         </div>
@@ -169,34 +177,55 @@ export const PDFAnnotationCanvas = ({
 
       {/* Status Bar */}
       <div className="mx-4 mb-2 flex items-center justify-between">
-        <Badge variant="outline" className="gap-2">
-          {selectedLabel ? (
-            <>
-              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: selectedLabel.color }} />
-              {selectedLabel.name}
-            </>
-          ) : (
-            "No label selected"
-          )}
-        </Badge>
-        <div className="flex gap-2">
-          <Button
-            variant={annotationMode === "text" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setAnnotationMode("text")}
-          >
-            <Type className="w-4 h-4 mr-1" />
-            Text
-          </Button>
-          <Button
-            variant={annotationMode === "box" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setAnnotationMode("box")}
-          >
-            <Square className="w-4 h-4 mr-1" />
-            Box
-          </Button>
+        <div className="flex items-center gap-3">
+          <Badge variant="outline" className="gap-2">
+            {selectedLabel ? (
+              <>
+                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: selectedLabel.color }} />
+                {selectedLabel.name}
+              </>
+            ) : (
+              "No label selected"
+            )}
+          </Badge>
+          <div className="flex gap-2">
+            <Button
+              variant={annotationMode === "text" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setAnnotationMode("text")}
+            >
+              <Type className="w-4 h-4 mr-1" />
+              Text
+            </Button>
+            <Button
+              variant={annotationMode === "box" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setAnnotationMode("box")}
+            >
+              <Square className="w-4 h-4 mr-1" />
+              Box
+            </Button>
+          </div>
         </div>
+        {pdfFile && (
+          <>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Upload Different PDF
+            </Button>
+          </>
+        )}
       </div>
 
       {/* Main Content */}
@@ -242,14 +271,24 @@ export const PDFAnnotationCanvas = ({
                     style={{ cursor: annotationMode === "box" && selectedLabelId ? "crosshair" : "text" }}
                   >
                     <Document
-                      file={pdfFile}
+                      file={getPdfSource()}
                       onLoadSuccess={onDocumentLoadSuccess}
                       className="border rounded-lg shadow-lg bg-white"
+                      loading={
+                        <div className="flex items-center justify-center p-8">
+                          <div className="text-center">
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                            <p className="text-sm text-muted-foreground">Loading PDF...</p>
+                          </div>
+                        </div>
+                      }
                     >
                       <Page
                         pageNumber={currentPage}
                         scale={scale}
                         onMouseUp={handleTextSelection}
+                        renderTextLayer={true}
+                        renderAnnotationLayer={false}
                       />
                     </Document>
 

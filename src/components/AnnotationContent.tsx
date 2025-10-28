@@ -179,29 +179,18 @@ export const AnnotationContent = ({
           />
         )}
         {mode === "text" && (
-          <>
-            <TextAnnotationCanvas
-              text={SAMPLE_TEXT}
-              annotations={textAnnotations}
-              labels={labels}
-              selectedLabelId={selectedLabelId}
-              onAddAnnotation={onAddTextAnnotation}
-            />
-            <div className="mt-4">
-              <PDFAnnotationCanvas
-                pdfFile={null}
-                onFileUpload={(file) => console.log("PDF uploaded:", file)}
-                textAnnotations={textAnnotations}
-                boxAnnotations={selectedImage?.annotations.boxes || []}
-                labels={labels}
-                selectedLabelId={selectedLabelId}
-                onAddTextAnnotation={onAddTextAnnotation}
-                onAddBoxAnnotation={onAddBox}
-                onDeleteTextAnnotation={(id) => console.log("Delete text annotation:", id)}
-                onDeleteBoxAnnotation={onDeleteBox}
-              />
-            </div>
-          </>
+          <PDFAnnotationCanvas
+            pdfFile="/documents/sample-document.pdf"
+            onFileUpload={(file) => console.log("PDF uploaded:", file)}
+            textAnnotations={textAnnotations}
+            boxAnnotations={selectedImage?.annotations.boxes || []}
+            labels={labels}
+            selectedLabelId={selectedLabelId}
+            onAddTextAnnotation={onAddTextAnnotation}
+            onAddBoxAnnotation={onAddBox}
+            onDeleteTextAnnotation={(id) => console.log("Delete text annotation:", id)}
+            onDeleteBoxAnnotation={onDeleteBox}
+          />
         )}
       </>
     );
