@@ -3,6 +3,7 @@ import {
   AnnotationMode,
   BoundingBox,
 } from "@/types/annotation";
+import { VideoItem } from "@/types/video";
 import { GridMode } from "@/types/gridMode";
 import { CanvasTool } from "@/contexts/AnnotationContext";
 import { useImages } from "./useImages";
@@ -42,15 +43,16 @@ export const useAnnotationState = () => {
 
   const { images, setImages, loading: imagesLoading } = useImages();
   const { labels, setLabels, loading: labelsLoading } = useLabels();
+  
+  const [videos, setVideos] = useState<VideoItem[]>([]);
+
   const { 
-    videos, 
-    setVideos, 
     selectedVideoId, 
     setSelectedVideoId,
     selectedFrameId,
     setSelectedFrameId,
     selectedVideo,
-  } = useVideos();
+  } = useVideos(videos, setVideos);
 
   // Set initial selected label and image when data loads
   useEffect(() => {

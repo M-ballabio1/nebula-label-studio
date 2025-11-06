@@ -70,13 +70,18 @@ const Index = () => {
 
   const filteredImages = useImageFilters(images, filters);
 
+  const { currentImageIndex, handlePreviousImage, handleNextImage, canGoPrevious, canGoNext } =
+    useImageNavigation(filteredImages, selectedImageId, setSelectedImageId);
+  
   const { 
     uploadVideo, 
     addFrameToVideo,
-  } = useVideos();
-
-  const { currentImageIndex, handlePreviousImage, handleNextImage, canGoPrevious, canGoNext } =
-    useImageNavigation(filteredImages, selectedImageId, setSelectedImageId);
+  } = useVideos(videos, setVideos);
+  
+  // Sync video upload handler
+  const handleVideoUploadInternal = async (file: File) => {
+    await uploadVideo(file);
+  };
 
   const {
     handleAddLabel,
@@ -158,10 +163,6 @@ const Index = () => {
     onZoomReset: handleZoomReset,
   });
 
-  const handleVideoUpload = async (file: File) => {
-    await uploadVideo(file);
-  };
-
   const handleFrameExtracted = (videoId: string) => (frame: any) => {
     addFrameToVideo(videoId, frame);
   };
@@ -185,7 +186,7 @@ const Index = () => {
         mode={mode} 
         images={images} 
         labels={labels} 
-        onVideoUpload={handleVideoUpload}
+        onVideoUpload={handleVideoUploadInternal}
       />
       <div className="flex-1 flex overflow-hidden">
         <SidebarContent

@@ -2,8 +2,10 @@ import { useState, useCallback } from "react";
 import { VideoItem, VideoFrame } from "@/types/video";
 import { toast } from "sonner";
 
-export const useVideos = () => {
-  const [videos, setVideos] = useState<VideoItem[]>([]);
+export const useVideos = (
+  initialVideos: VideoItem[] = [],
+  setVideos: (videos: VideoItem[]) => void
+) => {
   const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
   const [selectedFrameId, setSelectedFrameId] = useState<string | null>(null);
 
@@ -31,7 +33,7 @@ export const useVideos = () => {
         currentFrameId: null,
       };
 
-      setVideos((prev) => [...prev, newVideo]);
+      setVideos([...initialVideos, newVideo]);
       setSelectedVideoId(newVideo.id);
       toast.success("Video uploaded successfully");
       return newVideo;
@@ -39,11 +41,11 @@ export const useVideos = () => {
       toast.error("Failed to upload video");
       return null;
     }
-  }, []);
+  }, [initialVideos, setVideos]);
 
   const deleteVideo = useCallback((id: string): boolean => {
     try {
-      setVideos((prev) => prev.filter((v) => v.id !== id));
+      setVideos(initialVideos.filter((v) => v.id !== id));
       if (selectedVideoId === id) {
         setSelectedVideoId(null);
         setSelectedFrameId(null);
@@ -54,11 +56,11 @@ export const useVideos = () => {
       toast.error("Failed to delete video");
       return false;
     }
-  }, [selectedVideoId]);
+  }, [initialVideos, setVideos, selectedVideoId]);
 
   const addFrameToVideo = useCallback((videoId: string, frame: VideoFrame) => {
-    setVideos((prev) =>
-      prev.map((video) => {
+    setVideos(
+      initialVideos.map((video) => {
         if (video.id === videoId) {
           // Check if frame already exists
           const frameExists = video.frames.some((f) => f.id === frame.id);
@@ -66,6 +68,7 @@ export const useVideos = () => {
             toast.info("Frame already extracted");
             return video;
           }
+          toast.success(`Frame extracted successfully`);
           return {
             ...video,
             frames: [...video.frames, frame],
@@ -74,12 +77,11 @@ export const useVideos = () => {
         return video;
       })
     );
-    toast.success(`Frame extracted successfully`);
-  }, []);
+  }, [initialVideos, setVideos]);
 
   const removeFrameFromVideo = useCallback((videoId: string, frameId: string) => {
-    setVideos((prev) =>
-      prev.map((video) => {
+    setVideos(
+      initialVideos.map((video) => {
         if (video.id === videoId) {
           return {
             ...video,
@@ -93,14 +95,12 @@ export const useVideos = () => {
       setSelectedFrameId(null);
     }
     toast.success("Frame removed");
-  }, [selectedFrameId]);
+  }, [initialVideos, setVideos, selectedFrameId]);
 
-  const selectedVideo = videos.find((v) => v.id === selectedVideoId);
+  const selectedVideo = initialVideos.find((v) => v.id === selectedVideoId);
   const selectedFrame = selectedVideo?.frames.find((f) => f.id === selectedFrameId);
 
   return {
-    videos,
-    setVideos,
     selectedVideoId,
     setSelectedVideoId,
     selectedFrameId,
