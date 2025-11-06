@@ -7,6 +7,7 @@ import { GridMode } from "@/types/gridMode";
 import { CanvasTool } from "@/contexts/AnnotationContext";
 import { useImages } from "./useImages";
 import { useLabels } from "./useLabels";
+import { useVideos } from "./useVideos";
 
 export const useAnnotationState = () => {
   const [mode, setMode] = useState<AnnotationMode>("detection");
@@ -41,6 +42,15 @@ export const useAnnotationState = () => {
 
   const { images, setImages, loading: imagesLoading } = useImages();
   const { labels, setLabels, loading: labelsLoading } = useLabels();
+  const { 
+    videos, 
+    setVideos, 
+    selectedVideoId, 
+    setSelectedVideoId,
+    selectedFrameId,
+    setSelectedFrameId,
+    selectedVideo,
+  } = useVideos();
 
   // Set initial selected label and image when data loads
   useEffect(() => {
@@ -95,5 +105,12 @@ export const useAnnotationState = () => {
     setShowAnnotations,
     lockAnnotations,
     setLockAnnotations,
+    videos,
+    setVideos,
+    selectedVideoId,
+    setSelectedVideoId,
+    selectedFrameId,
+    setSelectedFrameId,
+    selectedVideo,
   };
 };

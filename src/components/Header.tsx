@@ -1,17 +1,36 @@
-import { useState } from "react";
-import { Layers } from "lucide-react";
+import { useState, useRef } from "react";
+import { Layers, Upload, Video } from "lucide-react";
 import { AppMenu } from "./AppMenu";
 import { SettingsModal } from "./SettingsModal";
 import { AnnotationMode, ImageItem, Label } from "@/types/annotation";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface HeaderProps {
   mode: AnnotationMode;
   images: ImageItem[];
   labels: Label[];
+  onVideoUpload?: (file: File) => void;
 }
 
-export const Header = ({ mode, images, labels }: HeaderProps) => {
+export const Header = ({ mode, images, labels, onVideoUpload }: HeaderProps) => {
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const videoInputRef = useRef<HTMLInputElement>(null);
+
+  const handleVideoClick = () => {
+    videoInputRef.current?.click();
+  };
+
+  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith("video/")) {
+        toast.error("Please select a valid video file");
+        return;
+      }
+      onVideoUpload?.(file);
+    }
+  };
 
   return (
     <>
@@ -32,6 +51,25 @@ export const Header = ({ mode, images, labels }: HeaderProps) => {
           </div>
         </div>
         
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleVideoClick}
+            className="h-9"
+          >
+            <Video className="w-4 h-4 mr-2" />
+            Upload Video
+          </Button>
+          <input
+            ref={videoInputRef}
+            type="file"
+            accept="video/*"
+            onChange={handleVideoChange}
+            className="hidden"
+          />
+          <AppMenu mode={mode} images={images} labels={labels} onOpenSettings={() => setSettingsOpen(true)} />
+        </div>
       </header>
       <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
     </>

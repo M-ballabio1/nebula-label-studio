@@ -1,6 +1,7 @@
 import { createContext, useContext, ReactNode } from "react";
 import { AnnotationMode, Label, ImageItem, BoundingBox } from "@/types/annotation";
 import { GridMode } from "@/types/gridMode";
+import { VideoItem } from "@/types/video";
 
 export type CanvasTool = "select" | "pan" | "draw" | "erase" | "measure";
 
@@ -35,6 +36,15 @@ interface AnnotationContextType {
   selectedImageId: string | null;
   setSelectedImageId: (id: string | null) => void;
   selectedImage?: ImageItem;
+  
+  // Videos
+  videos: VideoItem[];
+  setVideos: (videos: VideoItem[]) => void;
+  selectedVideoId: string | null;
+  setSelectedVideoId: (id: string | null) => void;
+  selectedFrameId: string | null;
+  setSelectedFrameId: (id: string | null) => void;
+  selectedVideo?: VideoItem;
   
   // Canvas State
   imageDimensions: { width: number; height: number };

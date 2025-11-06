@@ -7,12 +7,15 @@ import { SidebarContent } from "@/components/SidebarContent";
 import { AnnotationContent } from "@/components/AnnotationContent";
 import { ExportModal } from "@/components/ExportModal";
 import { SaveAnimation } from "@/components/SaveAnimation";
+import { Header } from "@/components/Header";
+import { VideoPlayer } from "@/components/VideoPlayer";
 import { useAnnotationState } from "@/hooks/useAnnotationState";
 import { useImageFilters } from "@/hooks/useImageFilters";
 import { useImageNavigation } from "@/hooks/useImageNavigation";
 import { useAnnotationHandlers } from "@/hooks/useAnnotationHandlers";
 import { useGridAnnotationHandlers } from "@/hooks/useGridAnnotationHandlers";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { useVideos } from "@/hooks/useVideos";
 import { toast } from "sonner";
 
 const Index = () => {
@@ -56,9 +59,21 @@ const Index = () => {
     setShowAnnotations,
     lockAnnotations,
     setLockAnnotations,
+    videos,
+    setVideos,
+    selectedVideoId,
+    setSelectedVideoId,
+    selectedFrameId,
+    setSelectedFrameId,
+    selectedVideo,
   } = useAnnotationState();
 
   const filteredImages = useImageFilters(images, filters);
+
+  const { 
+    uploadVideo, 
+    addFrameToVideo,
+  } = useVideos();
 
   const { currentImageIndex, handlePreviousImage, handleNextImage, canGoPrevious, canGoNext } =
     useImageNavigation(filteredImages, selectedImageId, setSelectedImageId);
@@ -143,8 +158,35 @@ const Index = () => {
     onZoomReset: handleZoomReset,
   });
 
+  const handleVideoUpload = async (file: File) => {
+    await uploadVideo(file);
+  };
+
+  const handleFrameExtracted = (videoId: string) => (frame: any) => {
+    addFrameToVideo(videoId, frame);
+  };
+
+  // Get current display item (image or video frame)
+  const currentDisplayImage = selectedFrameId && selectedVideo 
+    ? selectedVideo.frames.find(f => f.id === selectedFrameId)
+      ? {
+          id: selectedFrameId,
+          url: selectedVideo.frames.find(f => f.id === selectedFrameId)!.imageUrl,
+          thumbnailUrl: selectedVideo.frames.find(f => f.id === selectedFrameId)!.thumbnailUrl,
+          name: `${selectedVideo.name} - Frame ${selectedVideo.frames.find(f => f.id === selectedFrameId)!.frameNumber}`,
+          annotations: { boxes: [], polygons: [], tags: [] },
+        }
+      : undefined
+    : selectedImage;
+
   return (
     <div className="h-screen flex flex-col bg-background">
+      <Header 
+        mode={mode} 
+        images={images} 
+        labels={labels} 
+        onVideoUpload={handleVideoUpload}
+      />
       <div className="flex-1 flex overflow-hidden">
         <SidebarContent
           mode={mode}
@@ -202,57 +244,76 @@ const Index = () => {
           )}
 
           <div className="flex-1 overflow-auto bg-muted/20">
-            <AnnotationContent
-              mode={mode}
-              gridMode={gridMode}
-              selectedImage={selectedImage}
-              filteredImages={filteredImages}
-              labels={labels}
-              selectedLabelId={selectedLabelId}
-              selectedImageId={selectedImageId}
-              audioSegments={audioSegments}
-              textAnnotations={textAnnotations}
-              imageDimensions={imageDimensions}
-              segmentationImageDimensions={segmentationImageDimensions}
-              onAddBox={handleAddBox}
-              onDeleteBox={handleDeleteBox}
-              onUpdateBox={handleUpdateBox}
-              currentImageName={selectedImage?.name}
-              canGoPrevious={canGoPrevious}
-              canGoNext={canGoNext}
-              onPrevious={handlePreviousImage}
-              onNext={handleNextImage}
-              onAddPolygon={handleAddPolygon}
-              onDeletePolygon={handleDeletePolygon}
-              onToggleTag={handleToggleTag}
-              onAddAudioSegment={handleAddAudioSegment}
-              onDeleteAudioSegment={handleDeleteAudioSegment}
-              onAddTextAnnotation={handleAddTextAnnotation}
-              onImageDimensions={setImageDimensions}
-              onNormalizedDimensions={setNormalizedDimensions}
-              onSegmentationImageDimensions={setSegmentationImageDimensions}
-              onBoxSelect={setSelectedBox}
-              onBoxHover={setHoveredBox}
-              onGridAddBox={handleGridAddBox}
-              onGridDeleteBox={handleGridDeleteBox}
-              onGridUpdateBox={handleGridUpdateBox}
-              onGridAddPolygon={handleGridAddPolygon}
-              onGridDeletePolygon={handleGridDeletePolygon}
-              onGridToggleTag={handleGridToggleTag}
-              onImageSelect={setSelectedImageId}
-              activeTool={canvasTool}
-              imageTransform={imageTransform}
-              imageFilters={imageFilters}
-              showAnnotations={showAnnotations}
-              lockAnnotations={lockAnnotations}
-            />
+            {selectedVideoId && selectedVideo && !selectedFrameId ? (
+              <div className="h-full p-4">
+                <VideoPlayer
+                  video={selectedVideo}
+                  onFrameExtracted={handleFrameExtracted(selectedVideoId)}
+                  onFrameSelect={setSelectedFrameId}
+                  selectedFrameId={selectedFrameId}
+                />
+              </div>
+            ) : (
+              <AnnotationContent
+                mode={mode}
+                gridMode={gridMode}
+                selectedImage={currentDisplayImage}
+                filteredImages={filteredImages}
+                labels={labels}
+                selectedLabelId={selectedLabelId}
+                selectedImageId={selectedImageId}
+                audioSegments={audioSegments}
+                textAnnotations={textAnnotations}
+                imageDimensions={imageDimensions}
+                segmentationImageDimensions={segmentationImageDimensions}
+                onAddBox={handleAddBox}
+                onDeleteBox={handleDeleteBox}
+                onUpdateBox={handleUpdateBox}
+                currentImageName={currentDisplayImage?.name}
+                canGoPrevious={canGoPrevious}
+                canGoNext={canGoNext}
+                onPrevious={handlePreviousImage}
+                onNext={handleNextImage}
+                onAddPolygon={handleAddPolygon}
+                onDeletePolygon={handleDeletePolygon}
+                onToggleTag={handleToggleTag}
+                onAddAudioSegment={handleAddAudioSegment}
+                onDeleteAudioSegment={handleDeleteAudioSegment}
+                onAddTextAnnotation={handleAddTextAnnotation}
+                onImageDimensions={setImageDimensions}
+                onNormalizedDimensions={setNormalizedDimensions}
+                onSegmentationImageDimensions={setSegmentationImageDimensions}
+                onBoxSelect={setSelectedBox}
+                onBoxHover={setHoveredBox}
+                onGridAddBox={handleGridAddBox}
+                onGridDeleteBox={handleGridDeleteBox}
+                onGridUpdateBox={handleGridUpdateBox}
+                onGridAddPolygon={handleGridAddPolygon}
+                onGridDeletePolygon={handleGridDeletePolygon}
+                onGridToggleTag={handleGridToggleTag}
+                onImageSelect={setSelectedImageId}
+                activeTool={canvasTool}
+                imageTransform={imageTransform}
+                imageFilters={imageFilters}
+                showAnnotations={showAnnotations}
+                lockAnnotations={lockAnnotations}
+              />
+            )}
           </div>
 
           {gridMode === "single" && (
             <ThumbnailGallery
               images={filteredImages}
+              videos={videos}
               selectedImageId={selectedImageId}
+              selectedVideoId={selectedVideoId}
+              selectedFrameId={selectedFrameId}
               onSelectImage={setSelectedImageId}
+              onSelectVideo={setSelectedVideoId}
+              onSelectFrame={(videoId, frameId) => {
+                setSelectedVideoId(videoId);
+                setSelectedFrameId(frameId);
+              }}
             />
           )}
         </div>
