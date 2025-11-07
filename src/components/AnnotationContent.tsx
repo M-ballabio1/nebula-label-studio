@@ -10,6 +10,7 @@ import { PDFAnnotationCanvas } from "./PDFAnnotationCanvas";
 import { GridDetectionView } from "./GridDetectionView";
 import { GridSegmentationView } from "./GridSegmentationView";
 import { GridClassificationView } from "./GridClassificationView";
+import { BatchLabelSelector } from "./BatchLabelSelector";
 import { getGridClass, getDisplayImages } from "@/utils/gridUtils";
 import { SAMPLE_AUDIO_URL, SAMPLE_TEXT } from "@/config/sampleData";
 
@@ -21,6 +22,10 @@ interface AnnotationContentProps {
   labels: Label[];
   selectedLabelId: string | null;
   selectedImageId: string | null;
+  selectedImageIds: string[];
+  onToggleMultiSelect: (imageId: string) => void;
+  onBatchAssignLabel: (labelId: string) => void;
+  onClearMultiSelect: () => void;
   audioSegments: any[];
   textAnnotations: any[];
   imageDimensions: { width: number; height: number };
@@ -66,6 +71,10 @@ export const AnnotationContent = ({
   labels,
   selectedLabelId,
   selectedImageId,
+  selectedImageIds,
+  onToggleMultiSelect,
+  onBatchAssignLabel,
+  onClearMultiSelect,
   audioSegments,
   textAnnotations,
   imageDimensions,
@@ -242,14 +251,24 @@ export const AnnotationContent = ({
         />
       )}
       {mode === "classification" && (
-        <GridClassificationView
-          images={displayImages}
-          labels={labels}
-          selectedImageId={selectedImageId}
-          gridMode={gridMode}
-          onToggleTag={onGridToggleTag}
-          onImageSelect={onImageSelect}
-        />
+        <>
+          <BatchLabelSelector
+            selectedCount={selectedImageIds.length}
+            labels={labels}
+            onAssignLabel={onBatchAssignLabel}
+            onClearSelection={onClearMultiSelect}
+          />
+          <GridClassificationView
+            images={displayImages}
+            labels={labels}
+            selectedImageId={selectedImageId}
+            selectedImageIds={selectedImageIds}
+            gridMode={gridMode}
+            onToggleTag={onGridToggleTag}
+            onImageSelect={onImageSelect}
+            onToggleMultiSelect={onToggleMultiSelect}
+          />
+        </>
       )}
     </div>
   );

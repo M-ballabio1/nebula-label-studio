@@ -14,6 +14,7 @@ export const useAnnotationState = () => {
   const [mode, setMode] = useState<AnnotationMode>("detection");
   const [selectedLabelId, setSelectedLabelId] = useState<string | null>(null);
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
+  const [selectedImageIds, setSelectedImageIds] = useState<string[]>([]);
   const [imageDimensions, setImageDimensions] = useState({ width: 0, height: 0 });
   const [normalizedDimensions, setNormalizedDimensions] = useState({ width: 0, height: 0 });
   const [selectedBox, setSelectedBox] = useState<BoundingBox | null>(null);
@@ -82,6 +83,8 @@ export const useAnnotationState = () => {
     imagesLoading,
     selectedImageId,
     setSelectedImageId,
+    selectedImageIds,
+    setSelectedImageIds,
     imageDimensions,
     setImageDimensions,
     normalizedDimensions,

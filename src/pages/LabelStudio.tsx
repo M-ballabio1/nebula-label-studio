@@ -35,6 +35,8 @@ const Index = () => {
     setImages,
     selectedImageId,
     setSelectedImageId,
+    selectedImageIds,
+    setSelectedImageIds,
     imageDimensions,
     setImageDimensions,
     normalizedDimensions,
@@ -153,6 +155,44 @@ const Index = () => {
     toast.info("Zoom reset to 100%");
   };
 
+  const handleToggleMultiSelect = (imageId: string) => {
+    setSelectedImageIds((prev) =>
+      prev.includes(imageId)
+        ? prev.filter((id) => id !== imageId)
+        : [...prev, imageId]
+    );
+  };
+
+  const handleBatchAssignLabel = (labelId: string) => {
+    if (selectedImageIds.length === 0) return;
+    
+    setImages(
+      images.map((image) => {
+        if (selectedImageIds.includes(image.id)) {
+          const tags = image.annotations.tags || [];
+          const hasTag = tags.some((t) => t.labelId === labelId);
+          if (hasTag) return image;
+          
+          return {
+            ...image,
+            annotations: {
+              ...image.annotations,
+              tags: [...tags, { labelId }],
+            },
+          };
+        }
+        return image;
+      })
+    );
+    
+    toast.success(`Label assegnata a ${selectedImageIds.length} immagini`);
+    setSelectedImageIds([]);
+  };
+
+  const handleClearMultiSelect = () => {
+    setSelectedImageIds([]);
+  };
+
   useKeyboardShortcuts(labels, setSelectedLabelId, {
     onNextImage: handleNextImage,
     onPreviousImage: handlePreviousImage,
@@ -264,6 +304,10 @@ const Index = () => {
                 labels={labels}
                 selectedLabelId={selectedLabelId}
                 selectedImageId={selectedImageId}
+                selectedImageIds={selectedImageIds}
+                onToggleMultiSelect={handleToggleMultiSelect}
+                onBatchAssignLabel={handleBatchAssignLabel}
+                onClearMultiSelect={handleClearMultiSelect}
                 audioSegments={audioSegments}
                 textAnnotations={textAnnotations}
                 imageDimensions={imageDimensions}
