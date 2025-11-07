@@ -1,5 +1,5 @@
 import { AnnotationMode, Label, ImageItem, BoundingBox } from "@/types/annotation";
-import { GridMode } from "@/types/gridMode";
+import { GridMode, isMultiGrid } from "@/types/gridMode";
 import { EnhancedDetectionCanvas } from "./EnhancedDetectionCanvas";
 import { ClassificationPanel } from "./ClassificationPanel";
 import { EnhancedSegmentationCanvas } from "./EnhancedSegmentationCanvas";
@@ -104,7 +104,7 @@ export const AnnotationContent = ({
 }: AnnotationContentProps) => {
   const displayImages = getDisplayImages(gridMode, selectedImage, filteredImages);
 
-  if (gridMode === "single") {
+  if (!isMultiGrid(gridMode)) {
     return (
       <>
         {selectedImage && mode === "detection" && (

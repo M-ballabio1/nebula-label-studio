@@ -28,6 +28,7 @@ interface EnhancedDetectionCanvasProps {
   canGoNext?: boolean;
   onPrevious?: () => void;
   onNext?: () => void;
+  hideControls?: boolean;
 }
 
 type InteractionMode = "draw" | "select" | "move" | "resize";
@@ -54,6 +55,7 @@ export const EnhancedDetectionCanvas = ({
   canGoNext = false,
   onPrevious,
   onNext,
+  hideControls = false,
 }: EnhancedDetectionCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -530,122 +532,126 @@ export const EnhancedDetectionCanvas = ({
 
   return (
     <div className="w-full h-full flex flex-col bg-background relative">
-      {/* Workflow Instructions - Hover to view */}
-      <WorkflowInfoCard
-        title="Detection Workflow"
-        icon={<Tag className="w-4 h-4 text-primary" />}
-        steps={[
-          { text: "Select a label from the sidebar" },
-          { text: "Click and drag on the image to draw a bounding box" },
-          { text: "Release to complete the box" },
-          { text: "Repeat for multiple objects" },
-          { text: "Hover over boxes to see delete option" }
-        ]}
-        shortcuts={[
-          { keys: "Shift+Drag", description: "or Middle Mouse to pan" },
-          { keys: "Scroll", description: "to zoom" },
-          { keys: "ESC", description: "to cancel drawing" }
-        ]}
-      />
+      {!hideControls && (
+        <>
+          {/* Workflow Instructions - Hover to view */}
+          <WorkflowInfoCard
+            title="Detection Workflow"
+            icon={<Tag className="w-4 h-4 text-primary" />}
+            steps={[
+              { text: "Select a label from the sidebar" },
+              { text: "Click and drag on the image to draw a bounding box" },
+              { text: "Release to complete the box" },
+              { text: "Repeat for multiple objects" },
+              { text: "Hover over boxes to see delete option" }
+            ]}
+            shortcuts={[
+              { keys: "Shift+Drag", description: "or Middle Mouse to pan" },
+              { keys: "Scroll", description: "to zoom" },
+              { keys: "ESC", description: "to cancel drawing" }
+            ]}
+          />
 
-      <div className="p-3 border-b bg-card flex items-center gap-2 flex-wrap">
-        <div className="flex items-center gap-2">
-          <Button 
-            size="sm" 
-            variant="secondary" 
-            onClick={() => {
-              setZoom((z) => {
-                const newZoom = Math.min(5, z + 0.25);
-                toast.success(`Zoom: ${Math.round(newZoom * 100)}%`);
-                return newZoom;
-              });
-            }}
-            className="h-8"
-          >
-            <ZoomIn className="w-4 h-4" />
-          </Button>
-          <Button 
-            size="sm" 
-            variant="secondary" 
-            onClick={() => {
-              setZoom((z) => {
-                const newZoom = Math.max(0.25, z - 0.25);
-                toast.success(`Zoom: ${Math.round(newZoom * 100)}%`);
-                return newZoom;
-              });
-            }}
-            className="h-8"
-          >
-            <ZoomOut className="w-4 h-4" />
-          </Button>
-          <Button 
-            size="sm" 
-            variant="secondary" 
-            onClick={() => { 
-              setZoom(1); 
-              setPan({ x: 0, y: 0 }); 
-              toast.success("Zoom reset to 100%");
-            }}
-            className="h-8"
-          >
-            <RotateCcw className="w-4 h-4 mr-1" />
-            Reset
-          </Button>
-        </div>
-        
-        {/* Navigation Controls - Center */}
-        <ImageNavigationControls
-          currentImageName={currentImageName}
-          currentImageUrl={imageUrl}
-          canGoPrevious={canGoPrevious}
-          canGoNext={canGoNext}
-          onPrevious={onPrevious}
-          onNext={onNext}
-        />
-        
-        <div className="flex-1" />
-        
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-muted-foreground px-2 py-1 rounded bg-muted">
-            Zoom: {Math.round(zoom * 100)}%
-          </span>
-        </div>
-        
-        {selectedBox && (
-          <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={() => {
-                setCopiedBox({
-                  x: selectedBox.x,
-                  y: selectedBox.y,
-                  width: selectedBox.width,
-                  height: selectedBox.height,
-                  labelId: selectedBox.labelId,
-                });
-                toast.success("Box copied");
-              }}
-              className="h-8"
-            >
-              <Copy className="w-4 h-4 mr-1" />
-              Copy
-            </Button>
-            <Button
-              size="sm"
-              variant="destructive"
-              onClick={() => {
-                onDeleteBox(selectedBoxId!);
-                setSelectedBoxId(null);
-              }}
-              className="h-8"
-            >
-              <Trash2 className="w-4 h-4 mr-1" />
-              Delete
-            </Button>
+          <div className="p-3 border-b bg-card flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Button 
+                size="sm" 
+                variant="secondary" 
+                onClick={() => {
+                  setZoom((z) => {
+                    const newZoom = Math.min(5, z + 0.25);
+                    toast.success(`Zoom: ${Math.round(newZoom * 100)}%`);
+                    return newZoom;
+                  });
+                }}
+                className="h-8"
+              >
+                <ZoomIn className="w-4 h-4" />
+              </Button>
+              <Button 
+                size="sm" 
+                variant="secondary" 
+                onClick={() => {
+                  setZoom((z) => {
+                    const newZoom = Math.max(0.25, z - 0.25);
+                    toast.success(`Zoom: ${Math.round(newZoom * 100)}%`);
+                    return newZoom;
+                  });
+                }}
+                className="h-8"
+              >
+                <ZoomOut className="w-4 h-4" />
+              </Button>
+              <Button 
+                size="sm" 
+                variant="secondary" 
+                onClick={() => { 
+                  setZoom(1); 
+                  setPan({ x: 0, y: 0 }); 
+                  toast.success("Zoom reset to 100%");
+                }}
+                className="h-8"
+              >
+                <RotateCcw className="w-4 h-4 mr-1" />
+                Reset
+              </Button>
+            </div>
+            
+            {/* Navigation Controls - Center */}
+            <ImageNavigationControls
+              currentImageName={currentImageName}
+              currentImageUrl={imageUrl}
+              canGoPrevious={canGoPrevious}
+              canGoNext={canGoNext}
+              onPrevious={onPrevious}
+              onNext={onNext}
+            />
+            
+            <div className="flex-1" />
+            
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-muted-foreground px-2 py-1 rounded bg-muted">
+                Zoom: {Math.round(zoom * 100)}%
+              </span>
+            </div>
+            
+            {selectedBox && (
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => {
+                    setCopiedBox({
+                      x: selectedBox.x,
+                      y: selectedBox.y,
+                      width: selectedBox.width,
+                      height: selectedBox.height,
+                      labelId: selectedBox.labelId,
+                    });
+                    toast.success("Box copied");
+                  }}
+                  className="h-8"
+                >
+                  <Copy className="w-4 h-4 mr-1" />
+                  Copy
+                </Button>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => {
+                    onDeleteBox(selectedBoxId!);
+                    setSelectedBoxId(null);
+                  }}
+                  className="h-8"
+                >
+                  <Trash2 className="w-4 h-4 mr-1" />
+                  Delete
+                </Button>
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </>
+      )}
       <div ref={containerRef} className="flex-1 relative bg-muted/20 flex items-center justify-center">
         {isHoveringCanvas && (
           <div className="absolute bottom-4 left-4 z-10">

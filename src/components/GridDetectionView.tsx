@@ -1,7 +1,7 @@
 import { EnhancedDetectionCanvas } from "./EnhancedDetectionCanvas";
 import { ImageItem, Label, BoundingBox } from "@/types/annotation";
 import { getGridImageHeight } from "@/utils/gridUtils";
-import { GridMode } from "@/types/gridMode";
+import { GridMode, isMultiGrid } from "@/types/gridMode";
 
 interface GridDetectionViewProps {
   images: ImageItem[];
@@ -32,6 +32,8 @@ export const GridDetectionView = ({
   onBoxHover,
   onImageLoad,
 }: GridDetectionViewProps) => {
+  const hideControls = isMultiGrid(gridMode);
+  
   return (
     <>
       {images.map((img) => (
@@ -41,26 +43,29 @@ export const GridDetectionView = ({
             selectedImageId === img.id
               ? "border-primary shadow-lg"
               : "border-border hover:border-primary/50"
-          }`}
+          } ${hideControls ? "p-0" : ""}`}
           style={{ minHeight: getGridImageHeight(gridMode) }}
         >
-          <EnhancedDetectionCanvas
-            imageUrl={img.url}
-            boxes={img.annotations.boxes || []}
-            labels={labels}
-            selectedLabelId={selectedLabelId}
-            onAddBox={(box) => onAddBox(img.id, box)}
-            onDeleteBox={(id) => onDeleteBox(img.id, id)}
-            onUpdateBox={(id, updates) => onUpdateBox(img.id, id, updates)}
-            onImageLoad={(dims) => onImageLoad(img.id, dims)}
-            onBoxSelect={(box) => {
-              onImageSelect(img.id);
-              onBoxSelect(img.id, box);
-            }}
-            onBoxHover={(box) => {
-              if (selectedImageId === img.id) onBoxHover(img.id, box);
-            }}
-          />
+          <div className={hideControls ? "w-full h-full" : ""}>
+            <EnhancedDetectionCanvas
+              imageUrl={img.url}
+              boxes={img.annotations.boxes || []}
+              labels={labels}
+              selectedLabelId={selectedLabelId}
+              onAddBox={(box) => onAddBox(img.id, box)}
+              onDeleteBox={(id) => onDeleteBox(img.id, id)}
+              onUpdateBox={(id, updates) => onUpdateBox(img.id, id, updates)}
+              onImageLoad={(dims) => onImageLoad(img.id, dims)}
+              onBoxSelect={(box) => {
+                onImageSelect(img.id);
+                onBoxSelect(img.id, box);
+              }}
+              onBoxHover={(box) => {
+                if (selectedImageId === img.id) onBoxHover(img.id, box);
+              }}
+              hideControls={hideControls}
+            />
+          </div>
           <div
             onClick={() => onImageSelect(img.id)}
             className="absolute inset-0 pointer-events-auto border-2 rounded-lg transition-all cursor-pointer"

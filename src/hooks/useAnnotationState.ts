@@ -26,7 +26,7 @@ export const useAnnotationState = () => {
     annotated: null,
     labelIds: [],
   });
-  const [gridMode, setGridMode] = useState<GridMode>("single");
+  const [gridMode, setGridMode] = useState<GridMode>({ maxImages: 1, columns: 2 });
   const [canvasTool, setCanvasTool] = useState<CanvasTool>("draw");
   const [imageTransform, setImageTransform] = useState({
     rotation: 0,

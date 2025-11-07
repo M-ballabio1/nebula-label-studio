@@ -1,19 +1,12 @@
-import { GridMode } from "@/types/gridMode";
+import { GridMode, isMultiGrid } from "@/types/gridMode";
 import { ImageItem } from "@/types/annotation";
 
 export const getGridClass = (gridMode: GridMode): string => {
-  switch (gridMode) {
-    case "grid4":
-      return "grid grid-cols-2 gap-3";
-    case "grid6":
-      return "grid grid-cols-3 gap-3";
-    case "grid8":
-      return "grid grid-cols-4 gap-3";
-    case "grid12":
-      return "grid grid-cols-3 gap-3";
-    default:
-      return "";
+  if (!isMultiGrid(gridMode)) {
+    return "";
   }
+  
+  return `grid grid-cols-${gridMode.columns} gap-3`;
 };
 
 export const getDisplayImages = (
@@ -21,23 +14,23 @@ export const getDisplayImages = (
   selectedImage: ImageItem | undefined,
   filteredImages: ImageItem[]
 ): ImageItem[] => {
-  if (gridMode === "single") {
+  if (!isMultiGrid(gridMode)) {
     return selectedImage ? [selectedImage] : [];
   }
 
-  const maxImages = gridMode === "grid4" ? 4 : gridMode === "grid6" ? 6 : gridMode === "grid8" ? 8 : 12;
-  return filteredImages.slice(0, maxImages);
+  return filteredImages.slice(0, gridMode.maxImages);
 };
 
 export const getGridImageHeight = (gridMode: GridMode): string => {
-  switch (gridMode) {
-    case "grid6":
-      return "350px";
-    case "grid8":
-      return "300px";
-    case "grid12":
-      return "280px";
-    default:
-      return "400px";
+  if (!isMultiGrid(gridMode)) {
+    return "400px";
   }
+  
+  // Calculate based on columns
+  if (gridMode.columns === 4) {
+    return "300px";
+  } else if (gridMode.columns === 3) {
+    return "350px";
+  }
+  return "400px";
 };

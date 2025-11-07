@@ -1,8 +1,11 @@
 import { useState } from "react";
-import { Filter, CheckCircle2, XCircle, Tag, Grid2X2, Grid3X3, Sparkles } from "lucide-react";
+import { Filter, CheckCircle2, XCircle, Sparkles, Grid3X3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/types/annotation";
+import { Label as LabelType } from "@/types/annotation";
 import { AnnotationMode } from "@/types/annotation";
+import { GridMode, isMultiGrid } from "@/types/gridMode";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,12 +16,17 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 
-type GridMode = "single" | "grid4" | "grid6" | "grid8" | "grid12";
-
 interface ImageFilterBarProps {
-  labels: Label[];
+  labels: LabelType[];
   selectedFilters: {
     annotated: boolean | null;
     labelIds: string[];
@@ -170,47 +178,52 @@ export const ImageFilterBar = ({
         <>
           <div className="h-6 w-px bg-border" />
 
-          <div className="flex items-center gap-1">
-            <Button
-              size="sm"
-              variant={gridMode === "single" ? "default" : "secondary"}
-              onClick={() => onGridModeChange("single")}
-              className="h-8 px-2.5"
-            >
-              1
-            </Button>
-            <Button
-              size="sm"
-              variant={gridMode === "grid4" ? "default" : "secondary"}
-              onClick={() => onGridModeChange("grid4")}
-              className="h-8 px-2"
-            >
-              2×2
-            </Button>
-            <Button
-              size="sm"
-              variant={gridMode === "grid6" ? "default" : "secondary"}
-              onClick={() => onGridModeChange("grid6")}
-              className="h-8 px-2"
-            >
-              2×3
-            </Button>
-            <Button
-              size="sm"
-              variant={gridMode === "grid8" ? "default" : "secondary"}
-              onClick={() => onGridModeChange("grid8")}
-              className="h-8 px-2"
-            >
-              2×4
-            </Button>
-            <Button
-              size="sm"
-              variant={gridMode === "grid12" ? "default" : "secondary"}
-              onClick={() => onGridModeChange("grid12")}
-              className="h-8 px-2"
-            >
-              3×4
-            </Button>
+          <div className="flex items-center gap-2">
+            <Grid3X3 className="w-4 h-4 text-muted-foreground" />
+            <Label htmlFor="grid-images" className="text-sm whitespace-nowrap">
+              Images:
+            </Label>
+            <Input
+              id="grid-images"
+              type="number"
+              min="1"
+              max="50"
+              value={gridMode.maxImages}
+              onChange={(e) => {
+                const value = parseInt(e.target.value) || 1;
+                const clamped = Math.min(50, Math.max(1, value));
+                onGridModeChange({
+                  maxImages: clamped,
+                  columns: gridMode.columns,
+                });
+              }}
+              className="h-8 w-16 text-center"
+            />
+            {isMultiGrid(gridMode) && (
+              <>
+                <Label htmlFor="grid-columns" className="text-sm whitespace-nowrap">
+                  Columns:
+                </Label>
+                <Select
+                  value={gridMode.columns.toString()}
+                  onValueChange={(value) => {
+                    onGridModeChange({
+                      maxImages: gridMode.maxImages,
+                      columns: parseInt(value),
+                    });
+                  }}
+                >
+                  <SelectTrigger id="grid-columns" className="h-8 w-16">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="2">2</SelectItem>
+                    <SelectItem value="3">3</SelectItem>
+                    <SelectItem value="4">4</SelectItem>
+                  </SelectContent>
+                </Select>
+              </>
+            )}
           </div>
         </>
       )}

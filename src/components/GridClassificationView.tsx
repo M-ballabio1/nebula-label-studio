@@ -1,7 +1,7 @@
 import { ClassificationPanel } from "./ClassificationPanel";
 import { ImageItem, Label } from "@/types/annotation";
 import { getGridImageHeight } from "@/utils/gridUtils";
-import { GridMode } from "@/types/gridMode";
+import { GridMode, isMultiGrid } from "@/types/gridMode";
 
 interface GridClassificationViewProps {
   images: ImageItem[];

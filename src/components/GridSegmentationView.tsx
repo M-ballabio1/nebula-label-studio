@@ -1,7 +1,7 @@
 import { EnhancedSegmentationCanvas } from "./EnhancedSegmentationCanvas";
 import { ImageItem, Label, SegmentationPolygon } from "@/types/annotation";
 import { getGridImageHeight } from "@/utils/gridUtils";
-import { GridMode } from "@/types/gridMode";
+import { GridMode, isMultiGrid } from "@/types/gridMode";
 
 interface GridSegmentationViewProps {
   images: ImageItem[];

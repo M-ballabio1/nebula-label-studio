@@ -16,6 +16,7 @@ import { useAnnotationHandlers } from "@/hooks/useAnnotationHandlers";
 import { useGridAnnotationHandlers } from "@/hooks/useGridAnnotationHandlers";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useVideos } from "@/hooks/useVideos";
+import { isMultiGrid } from "@/types/gridMode";
 import { toast } from "sonner";
 
 const Index = () => {
@@ -302,7 +303,7 @@ const Index = () => {
             )}
           </div>
 
-          {gridMode === "single" && (
+          {!isMultiGrid(gridMode) && (
             <ThumbnailGallery
               images={filteredImages}
               videos={videos}
