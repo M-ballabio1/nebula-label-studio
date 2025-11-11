@@ -1,4 +1,5 @@
 import { AnnotationMode, Label, ImageItem, BoundingBox } from "@/types/annotation";
+import { VideoItem } from "@/types/video";
 import { GridMode, isMultiGrid } from "@/types/gridMode";
 import { EnhancedDetectionCanvas } from "./EnhancedDetectionCanvas";
 import { ClassificationPanel } from "./ClassificationPanel";
@@ -62,6 +63,10 @@ interface AnnotationContentProps {
   canGoNext?: boolean;
   onPrevious?: () => void;
   onNext?: () => void;
+  // Video props
+  videos?: VideoItem[];
+  selectedVideo?: VideoItem | undefined;
+  setVideos?: (videos: VideoItem[]) => void;
 }
 
 export const AnnotationContent = ({
@@ -111,6 +116,9 @@ export const AnnotationContent = ({
   canGoNext,
   onPrevious,
   onNext,
+  videos = [],
+  selectedVideo,
+  setVideos,
 }: AnnotationContentProps) => {
   const displayImages = getDisplayImages(gridMode, selectedImage, filteredImages);
 
@@ -204,11 +212,36 @@ export const AnnotationContent = ({
         )}
         {mode === "video" && (
           <VideoAnnotationCanvas
-            videoUrl="/video/sample-video.mp4"
+            videoUrl={selectedVideo?.url || ""}
             labels={labels}
             selectedLabelId={selectedLabelId}
-            onFrameExtracted={(frame) => console.log("Frame extracted:", frame)}
-            onAnnotationModeSelect={(newMode) => console.log("Switch to mode:", newMode)}
+            onFrameExtracted={(frame) => {
+              if (selectedVideo) {
+                const newFrame = {
+                  id: `frame_${Date.now()}`,
+                  frameNumber: frame.frameNumber,
+                  timestamp: frame.timestamp,
+                  imageUrl: frame.imageData,
+                  thumbnailUrl: frame.imageData,
+                };
+                
+                setVideos(
+                  videos.map((v) => {
+                    if (v.id === selectedVideo.id) {
+                      return {
+                        ...v,
+                        frames: [...v.frames, newFrame],
+                      };
+                    }
+                    return v;
+                  })
+                );
+              }
+            }}
+            onAnnotationModeSelect={(newMode) => {
+              // Switch mode but keep video context
+              console.log("Switch to mode:", newMode);
+            }}
           />
         )}
       </>

@@ -45,7 +45,17 @@ export const useAnnotationState = () => {
   const { images, setImages, loading: imagesLoading } = useImages();
   const { labels, setLabels, loading: labelsLoading } = useLabels();
   
-  const [videos, setVideos] = useState<VideoItem[]>([]);
+  const [videos, setVideos] = useState<VideoItem[]>([
+    {
+      id: "video_default",
+      url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+      name: "Big Buck Bunny",
+      duration: 596.5,
+      fps: 30,
+      frames: [],
+      currentFrameId: null,
+    }
+  ]);
 
   const { 
     selectedVideoId, 
@@ -67,6 +77,13 @@ export const useAnnotationState = () => {
       setSelectedImageId(images[0].id);
     }
   }, [images, selectedImageId]);
+
+  // Set initial video selection
+  useEffect(() => {
+    if (videos.length > 0 && !selectedVideoId) {
+      setSelectedVideoId(videos[0].id);
+    }
+  }, [videos, selectedVideoId]);
 
   const selectedImage = images.find((img) => img.id === selectedImageId);
 

@@ -274,7 +274,8 @@ const Index = () => {
             mode === "segmentation" ||
             mode === "classification" ||
             mode === "audio" ||
-            mode === "text") && (
+            mode === "text" ||
+            mode === "video") && (
             <ImageFilterBar
               labels={labels}
               selectedFilters={filters}
@@ -286,68 +287,60 @@ const Index = () => {
           )}
 
           <div className="flex-1 overflow-auto bg-muted/20">
-            {selectedVideoId && selectedVideo && !selectedFrameId ? (
-              <div className="h-full p-4">
-                <VideoPlayer
-                  video={selectedVideo}
-                  onFrameExtracted={handleFrameExtracted(selectedVideoId)}
-                  onFrameSelect={setSelectedFrameId}
-                  selectedFrameId={selectedFrameId}
-                />
-              </div>
-            ) : (
-              <AnnotationContent
-                mode={mode}
-                gridMode={gridMode}
-                selectedImage={currentDisplayImage}
-                filteredImages={filteredImages}
-                labels={labels}
-                selectedLabelId={selectedLabelId}
-                selectedImageId={selectedImageId}
-                selectedImageIds={selectedImageIds}
-                onToggleMultiSelect={handleToggleMultiSelect}
-                onBatchAssignLabel={handleBatchAssignLabel}
-                onClearMultiSelect={handleClearMultiSelect}
-                audioSegments={audioSegments}
-                textAnnotations={textAnnotations}
-                imageDimensions={imageDimensions}
-                segmentationImageDimensions={segmentationImageDimensions}
-                onAddBox={handleAddBox}
-                onDeleteBox={handleDeleteBox}
-                onUpdateBox={handleUpdateBox}
-                currentImageName={currentDisplayImage?.name}
-                canGoPrevious={canGoPrevious}
-                canGoNext={canGoNext}
-                onPrevious={handlePreviousImage}
-                onNext={handleNextImage}
-                onAddPolygon={handleAddPolygon}
-                onDeletePolygon={handleDeletePolygon}
-                onToggleTag={handleToggleTag}
-                onAddAudioSegment={handleAddAudioSegment}
-                onDeleteAudioSegment={handleDeleteAudioSegment}
-                onAddTextAnnotation={handleAddTextAnnotation}
-                onImageDimensions={setImageDimensions}
-                onNormalizedDimensions={setNormalizedDimensions}
-                onSegmentationImageDimensions={setSegmentationImageDimensions}
-                onBoxSelect={setSelectedBox}
-                onBoxHover={setHoveredBox}
-                onGridAddBox={handleGridAddBox}
-                onGridDeleteBox={handleGridDeleteBox}
-                onGridUpdateBox={handleGridUpdateBox}
-                onGridAddPolygon={handleGridAddPolygon}
-                onGridDeletePolygon={handleGridDeletePolygon}
-                onGridToggleTag={handleGridToggleTag}
-                onImageSelect={setSelectedImageId}
-                activeTool={canvasTool}
-                imageTransform={imageTransform}
-                imageFilters={imageFilters}
-                showAnnotations={showAnnotations}
-                lockAnnotations={lockAnnotations}
-              />
-            )}
+            <AnnotationContent
+              mode={mode}
+              gridMode={gridMode}
+              selectedImage={currentDisplayImage}
+              filteredImages={filteredImages}
+              labels={labels}
+              selectedLabelId={selectedLabelId}
+              selectedImageId={selectedImageId}
+              selectedImageIds={selectedImageIds}
+              onToggleMultiSelect={handleToggleMultiSelect}
+              onBatchAssignLabel={handleBatchAssignLabel}
+              onClearMultiSelect={handleClearMultiSelect}
+              audioSegments={audioSegments}
+              textAnnotations={textAnnotations}
+              imageDimensions={imageDimensions}
+              segmentationImageDimensions={segmentationImageDimensions}
+              onAddBox={handleAddBox}
+              onDeleteBox={handleDeleteBox}
+              onUpdateBox={handleUpdateBox}
+              currentImageName={currentDisplayImage?.name}
+              canGoPrevious={canGoPrevious}
+              canGoNext={canGoNext}
+              onPrevious={handlePreviousImage}
+              onNext={handleNextImage}
+              onAddPolygon={handleAddPolygon}
+              onDeletePolygon={handleDeletePolygon}
+              onToggleTag={handleToggleTag}
+              onAddAudioSegment={handleAddAudioSegment}
+              onDeleteAudioSegment={handleDeleteAudioSegment}
+              onAddTextAnnotation={handleAddTextAnnotation}
+              onImageDimensions={setImageDimensions}
+              onNormalizedDimensions={setNormalizedDimensions}
+              onSegmentationImageDimensions={setSegmentationImageDimensions}
+              onBoxSelect={setSelectedBox}
+              onBoxHover={setHoveredBox}
+              onGridAddBox={handleGridAddBox}
+              onGridDeleteBox={handleGridDeleteBox}
+              onGridUpdateBox={handleGridUpdateBox}
+              onGridAddPolygon={handleGridAddPolygon}
+              onGridDeletePolygon={handleGridDeletePolygon}
+              onGridToggleTag={handleGridToggleTag}
+              onImageSelect={setSelectedImageId}
+              activeTool={canvasTool}
+              imageTransform={imageTransform}
+              imageFilters={imageFilters}
+              showAnnotations={showAnnotations}
+              lockAnnotations={lockAnnotations}
+              videos={videos}
+              selectedVideo={selectedVideo}
+              setVideos={setVideos}
+            />
           </div>
 
-          {!isMultiGrid(gridMode) && (
+          {!isMultiGrid(gridMode) && mode !== "video" && (
             <ThumbnailGallery
               images={filteredImages}
               videos={videos}
@@ -361,6 +354,36 @@ const Index = () => {
                 setSelectedFrameId(frameId);
               }}
             />
+          )}
+          
+          {/* Show only video frames in video mode */}
+          {mode === "video" && selectedVideo && selectedVideo.frames.length > 0 && (
+            <div className="h-32 border-t bg-card">
+              <div className="flex gap-2 p-2 overflow-x-auto">
+                {selectedVideo.frames.map((frame) => (
+                  <div
+                    key={frame.id}
+                    className={`relative flex-shrink-0 w-28 h-28 rounded-lg overflow-hidden cursor-pointer transition-all ${
+                      selectedFrameId === frame.id
+                        ? "ring-2 ring-primary scale-105 glow-primary"
+                        : "hover:ring-2 hover:ring-primary/50"
+                    }`}
+                    onClick={() => setSelectedFrameId(frame.id)}
+                  >
+                    <img
+                      src={frame.thumbnailUrl}
+                      alt={`Frame ${frame.frameNumber}`}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
+                      <p className="text-xs text-white truncate">
+                        Frame #{frame.frameNumber}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
         </div>
       </div>
