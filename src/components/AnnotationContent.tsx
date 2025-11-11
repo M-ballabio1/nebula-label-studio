@@ -7,6 +7,7 @@ import { AudioAnnotationCanvas } from "./AudioAnnotationCanvas";
 import { AudioSpectrogramCanvas } from "./AudioSpectrogramCanvas";
 import { TextAnnotationCanvas } from "./TextAnnotationCanvas";
 import { PDFAnnotationCanvas } from "./PDFAnnotationCanvas";
+import { VideoAnnotationCanvas } from "./VideoAnnotationCanvas";
 import { GridDetectionView } from "./GridDetectionView";
 import { GridSegmentationView } from "./GridSegmentationView";
 import { GridClassificationView } from "./GridClassificationView";
@@ -199,6 +200,15 @@ export const AnnotationContent = ({
             onAddBoxAnnotation={onAddBox}
             onDeleteTextAnnotation={(id) => console.log("Delete text annotation:", id)}
             onDeleteBoxAnnotation={onDeleteBox}
+          />
+        )}
+        {mode === "video" && (
+          <VideoAnnotationCanvas
+            videoUrl="/video/sample-video.mp4"
+            labels={labels}
+            selectedLabelId={selectedLabelId}
+            onFrameExtracted={(frame) => console.log("Frame extracted:", frame)}
+            onAnnotationModeSelect={(newMode) => console.log("Switch to mode:", newMode)}
           />
         )}
       </>

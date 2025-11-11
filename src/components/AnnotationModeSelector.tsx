@@ -1,4 +1,4 @@
-import { Square, Tag, Scissors, Mic, FileText } from "lucide-react";
+import { Square, Tag, Scissors, Mic, FileText, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AnnotationMode, ImageItem, Label } from "@/types/annotation";
 import { AppMenu } from "./AppMenu";
@@ -17,6 +17,7 @@ const TOOLS = [
   { mode: "segmentation" as AnnotationMode, icon: Scissors, label: "Segmentation" },
   { mode: "audio" as AnnotationMode, icon: Mic, label: "Audio" },
   { mode: "text" as AnnotationMode, icon: FileText, label: "Text" },
+  { mode: "video" as AnnotationMode, icon: Video, label: "Video" },
 ];
 
 export const AnnotationModeSelector = ({ mode, onModeChange, images, labels }: AnnotationModeSelectorProps) => {
